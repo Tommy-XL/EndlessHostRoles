@@ -186,7 +186,7 @@ internal static class ExtendedPlayerControl
         {
             if (pc == player || pc.AmOwner) continue;
             CustomRpcSender sender = CustomRpcSender.Create($"SnapTo Freeze ({player.GetNameWithRole()})", SendOption.Reliable);
-            sender.StartMessage(pc.GetClientId());
+            sender.StartMessage(pc.OwnerId);
             sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                 .WriteVector2(player.transform.position)
                 .Write(player.NetTransform.lastSequenceId)
