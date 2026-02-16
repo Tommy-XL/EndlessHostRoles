@@ -2297,7 +2297,7 @@ public static class Utils
         
         static string ReplaceDigitsOutsideRichText(string text)
         {
-            if (string.IsNullOrWhiteSpace(text)) return text;
+            if (string.IsNullOrWhiteSpace(text) || !IsTooManyDigits(text)) return text;
 
             StringBuilder sb = new(text.Length);
             bool insideTag = false;
@@ -2324,6 +2324,22 @@ public static class Utils
             }
 
             return sb.ToString();
+        }
+
+        static bool IsTooManyDigits(string text)
+        {
+            int count = 0;
+            
+            foreach (char c in text)
+            {
+                if (c is >= '0' and <= '9')
+                {
+                    count++;
+                    if (count >= 5) return true;
+                }
+            }
+
+            return false;
         }
     }
 
