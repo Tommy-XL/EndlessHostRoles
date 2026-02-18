@@ -782,7 +782,7 @@ internal static class ChatCommands
     
     private static void CopyPresetCommand(PlayerControl player, string text, string[] args)
     {
-        if (args.Length < 3 || !int.TryParse(args[1], out int sourcePresetId) || sourcePresetId is < 1 or > 10 || (!int.TryParse(args[2], out int targetPreset) && targetPreset is < 1 or > 10)) return;
+        if (args.Length < 3 || !int.TryParse(args[1], out int sourcePresetId) || sourcePresetId is < 1 or > 20 || (!int.TryParse(args[2], out int targetPreset) && targetPreset is < 1 or > 20)) return;
 
         Prompt.Show(string.Format(GetString("Promt.CopyPreset"), sourcePresetId, targetPreset), Copy, () => { });
         return;

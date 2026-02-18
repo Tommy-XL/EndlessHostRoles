@@ -219,15 +219,15 @@ internal static class ControllerManagerUpdatePatch
                 Utils.SendMessage(GetString("HostKillSelfByCommand"), title: $"<color=#ff0000>{GetString("DefaultSystemMessageTitle")}</color>");
             }
 
+            if (!Options.NoGameEnd.GetBool()) return;
+
+#if DEBUG
             if (KeysDown(KeyCode.F2, KeyCode.LeftControl))
             {
                 Logger.IsAlsoInGame = !Logger.IsAlsoInGame;
                 Logger.SendInGame($"In-game output log: {Logger.IsAlsoInGame}");
             }
 
-            if (!Options.NoGameEnd.GetBool()) return;
-
-#if DEBUG
             if (KeysDown(KeyCode.Return, KeyCode.F, KeyCode.LeftShift))
             {
                 Utils.FlashColor(new(1f, 0f, 0f, 0.3f));
