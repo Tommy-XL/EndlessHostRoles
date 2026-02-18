@@ -466,8 +466,6 @@ internal static class TitleLogoPatch
 [HarmonyPatch(typeof(ModManager), nameof(ModManager.LateUpdate))]
 internal static class ModManagerLateUpdatePatch
 {
-    
-    
     public static bool Prefix(ModManager __instance)
     {
         __instance.ShowModStamp();
