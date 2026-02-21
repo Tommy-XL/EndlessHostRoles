@@ -200,7 +200,7 @@ internal static class ChatCommands
             new("EnableAllRoles", "", GetString("CommandDescription.EnableAllRoles"), Command.UsageLevels.Host, Command.UsageTimes.InLobby, EnableAllRolesCommand, true, false),
             new("Achievements", "", GetString("CommandDescription.Achievements"), Command.UsageLevels.Modded, Command.UsageTimes.Always, AchievementsCommand, true, false),
             new("DeathNote", "{name}", GetString("CommandDescription.DeathNote"), Command.UsageLevels.Everyone, Command.UsageTimes.InMeeting, DeathNoteCommand, true, true, [GetString("CommandArgs.DeathNote.Name")]),
-            new("Whisper", "{id} {message}", GetString("CommandDescription.Whisper"), Command.UsageLevels.Everyone, Command.UsageTimes.InMeeting, WhisperCommand, true, true, [GetString("CommandArgs.Whisper.Id"), GetString("CommandArgs.Whisper.Message")]),
+            new("Whisper", "{ids} {message}", GetString("CommandDescription.Whisper"), Command.UsageLevels.Everyone, Command.UsageTimes.InMeeting, WhisperCommand, true, true, [GetString("CommandArgs.Whisper.Ids"), GetString("CommandArgs.Whisper.Message")]),
             new("HWhisper", "{id} {message}", GetString("CommandDescription.HWhisper"), Command.UsageLevels.Host, Command.UsageTimes.Always, HWhisperCommand, true, false, [GetString("CommandArgs.HWhisper.Id"), GetString("CommandArgs.HWhisper.Message")]),
             new("Spectate", "[id]", GetString("CommandDescription.Spectate"), Command.UsageLevels.Everyone, Command.UsageTimes.InLobby, SpectateCommand, false, false, [GetString("CommandArgs.Spectate.Id")]),
             new("Anagram", "", GetString("CommandDescription.Anagram"), Command.UsageLevels.Everyone, Command.UsageTimes.AfterDeathOrLobby, AnagramCommand, true, false),
@@ -524,8 +524,18 @@ internal static class ChatCommands
         if (!Main.PlayerStates.TryGetValue(player.PlayerId, out PlayerState state) || state.IsDead || state.Role is not Summoner sum || player.GetAbilityUseLimit() < 1) return;
         if (args.Length < 2 || !byte.TryParse(args[1], out byte targetId) || !Main.PlayerStates.TryGetValue(targetId, out var targetState) || !targetState.IsDead) return;
 
+        bool reSummoned = !Summoner.AlreadySummoned.Add(targetId);
+
+        if (reSummoned && !Summoner.AllowSummoningTheSamePlayerTwice.GetBool())
+        {
+            Utils.SendMessage("\n", player.PlayerId, GetString("Summoner.CantSummonSamePlayerTwice"));
+            return;
+        }
+        
         sum.SummonedPlayerId = targetId;
-        player.RpcRemoveAbilityUse();
+        
+        if (!reSummoned || Summoner.ReSummonTakesAbilityUse.GetBool())
+            player.RpcRemoveAbilityUse();
         
         Utils.SendMessage("\n", player.PlayerId, string.Format(GetString("Summoner.SummonSuccessMessage"), targetId.ColoredPlayerName()));
         
@@ -1128,33 +1138,40 @@ internal static class ChatCommands
             return;
         }
 
-        if (args.Length < 3 || !byte.TryParse(args[1], out byte targetId)) return;
-
-        PlayerState state = Main.PlayerStates[targetId];
-        if (state.IsDead || state.SubRoles.Contains(CustomRoles.Shy)) return;
-
-        string fromName = player.PlayerId.ColoredPlayerName();
-        string toName = targetId.ColoredPlayerName();
-        
-        string msg = args[2..].Join(delimiter: " ");
-        string title = string.Format(GetString("WhisperTitle"), fromName, player.PlayerId);
-
-        Utils.SendMessage(msg, targetId, title, importance: MessageImportance.High);
-        ChatUpdatePatch.LastMessages.Add((msg, targetId, title, Utils.TimeStamp));
-
-        MeetingManager.SendCommandUsedMessage(args[0]);
+        if (args.Length < 3) return;
 
         string coloredRole = CustomRoles.Listener.ToColoredString();
+        PlayerControl[] listeners = CustomRoles.Listener.IsEnable() ? Main.EnumerateAlivePlayerControls().Where(x => x.Is(CustomRoles.Listener)).ToArray() : [];
+        string[] ids = args[1].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        foreach (PlayerControl listener in Main.EnumerateAlivePlayerControls())
+        foreach (string id in ids)
         {
-            if (!listener.Is(CustomRoles.Listener) || IRandom.Instance.Next(100) >= Listener.WhisperHearChance.GetInt()) continue;
-            string message = IRandom.Instance.Next(100) < Listener.FullMessageHearChance.GetInt() ? string.Format(GetString("Listener.FullMessage"), coloredRole, fromName, toName, msg) : string.Format(GetString("Listener.FromTo"), coloredRole, fromName, toName);
-            Utils.SendMessage("\n", listener.PlayerId, message);
+            if (!byte.TryParse(id, out byte targetId)) continue;
             
-            if (listener.AmOwner && ++Listener.LocalPlayerHeardMessagesThisMeeting >= 3)
-                Achievements.Type.Eavesdropper.Complete();
+            PlayerState state = Main.PlayerStates[targetId];
+            if (state.IsDead || state.SubRoles.Contains(CustomRoles.Shy)) continue;
+
+            string fromName = player.PlayerId.ColoredPlayerName();
+            string toName = targetId.ColoredPlayerName();
+        
+            string msg = args[2..].Join(delimiter: " ");
+            string title = string.Format(GetString("WhisperTitle"), fromName, player.PlayerId);
+
+            Utils.SendMessage(msg, targetId, title, importance: MessageImportance.High);
+            ChatUpdatePatch.LastMessages.Add((msg, targetId, title, Utils.TimeStamp));
+
+            foreach (PlayerControl listener in listeners)
+            {
+                if (IRandom.Instance.Next(100) >= Listener.WhisperHearChance.GetInt()) continue;
+                string message = IRandom.Instance.Next(100) < Listener.FullMessageHearChance.GetInt() ? string.Format(GetString("Listener.FullMessage"), coloredRole, fromName, toName, msg) : string.Format(GetString("Listener.FromTo"), coloredRole, fromName, toName);
+                Utils.SendMessage("\n", listener.PlayerId, message);
+                
+                if (listener.AmOwner && ++Listener.LocalPlayerHeardMessagesThisMeeting >= 3)
+                    Achievements.Type.Eavesdropper.Complete();
+            }
         }
+
+        MeetingManager.SendCommandUsedMessage(args[0]);
     }
 
     private static void HWhisperCommand(PlayerControl player, string text, string[] args)
