@@ -47,6 +47,11 @@ public class Perplexer : RoleBase
         AURoleOptions.ShapeshifterDuration = 0.1f;
     }
     
+    public override void SetKillCooldown(byte id)
+    {
+        Main.AllPlayerKillCooldown[id] = KillCooldown.GetFloat();
+    }
+
     public override bool OnShapeshift(PlayerControl shapeshifter, PlayerControl target, bool shapeshifting)
     {
         if (MarkedId == byte.MaxValue && target.IsAlive() && shapeshifter.GetAbilityUseLimit() >= 1f)
