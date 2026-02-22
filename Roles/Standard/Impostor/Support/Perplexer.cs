@@ -25,7 +25,7 @@ public class Perplexer : RoleBase
             .AutoSetupOption(ref KillCooldown, 30f, new FloatValueRule(1, 120, 1), OptionFormat.Seconds)
             .AutoSetupOption(ref AbilityCooldown, 30f, new FloatValueRule(1, 120, 1), OptionFormat.Seconds)
             .AutoSetupOption(ref AbilityDuration, 10f, new FloatValueRule(1, 120, 1), OptionFormat.Seconds)
-            .AutoSetupOption(ref AbilityUseLimit, 3f, new FloatValueRule(0, 20, 0.05f), OptionFormat.None)
+            .AutoSetupOption(ref AbilityUseLimit, 3f, new FloatValueRule(0, 20, 0.05f), OptionFormat.Times)
             .AutoSetupOption(ref AbilityUseGainWithEachKill, 0.5f, new FloatValueRule(0f, 5f, 0.25f), OptionFormat.Times);
     }
 
@@ -44,26 +44,22 @@ public class Perplexer : RoleBase
     public override void ApplyGameOptions(IGameOptions opt, byte playerId)
     {
         AURoleOptions.ShapeshifterCooldown = AbilityCooldown.GetInt();
-        opt.SetVision(true);
+        AURoleOptions.ShapeshifterDuration = 0.1f;
     }
+    
     public override bool OnShapeshift(PlayerControl shapeshifter, PlayerControl target, bool shapeshifting)
     {
-        bool animated = !Options.DisableShapeshiftAnimations.GetBool();
-
         if (MarkedId == byte.MaxValue && target.IsAlive())
         {
             MarkedId = target.PlayerId;
-            Main.AllPlayerSpeed[target.PlayerId] *= -1;
-            Utils.MarkEveryoneDirtySettings();
-            LateTask.New(() => shapeshifter.RpcShapeshift(shapeshifter, animated), animated ? 1.2f : 0.5f);
+            Main.AllPlayerSpeed[MarkedId] *= -1;
+            target.MarkDirtySettings();
+            
             LateTask.New(() =>
             {
-                if (target != null && target.IsAlive())
-                {
-                    Main.AllPlayerSpeed[target.PlayerId] *= -1;
-                    MarkedId = byte.MaxValue;
-                    Utils.MarkEveryoneDirtySettings();
-                }
+                if (Main.AllPlayerSpeed[MarkedId] < 0f) Main.AllPlayerSpeed[MarkedId] *= -1;
+                MarkedId = byte.MaxValue;
+                if (target && target.IsAlive()) target.MarkDirtySettings();
             }, AbilityDuration.GetFloat(), "Perplexer Revert Control Invert");
         }
         return false;
