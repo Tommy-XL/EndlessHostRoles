@@ -154,18 +154,21 @@ internal class QuizMaster : RoleBase
         return CanVent.GetBool();
     }
 
-    public override void AfterMeetingTasks()
+    public static void OnMeetingEnd()
     {
         Data.NumPlayersDeadThisRound = 0;
-
-        if (Target != byte.MaxValue)
-        {
-            CheckForEndVotingPatch.TryAddAfterMeetingDeathPlayers(PlayerState.DeathReason.WrongAnswer, Target);
-            Target = byte.MaxValue;
-        }
-
         MessagesToSend = [];
-        CurrentQuestion = null;
+        
+        QuizMasters.ForEach(x =>
+        {
+            if (x.Target != byte.MaxValue)
+            {
+                CheckForEndVotingPatch.TryAddAfterMeetingDeathPlayers(PlayerState.DeathReason.WrongAnswer, x.Target);
+                x.Target = byte.MaxValue;
+            }
+
+            x.CurrentQuestion = null;
+        });
     }
 
     public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)

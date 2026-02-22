@@ -234,6 +234,7 @@ internal static class CheckForEndVotingPatch
 
             Commited.OnVotingResultsShown(statesList);
             Summoner.OnMeetingEnd();
+            QuizMaster.OnMeetingEnd();
 
             states = [.. statesList];
 
