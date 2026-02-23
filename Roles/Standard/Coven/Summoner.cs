@@ -174,6 +174,7 @@ public class Summoner : CovenBase
 
     public override void OnReportDeadBody()
     {
+        if (SummonedPlayerId == byte.MaxValue) return;
         SummonedPlayerTimer?.Dispose();
         SummonedPlayerTimer = null;
         Main.PlayerStates[SummonedPlayerId].SetDead();
