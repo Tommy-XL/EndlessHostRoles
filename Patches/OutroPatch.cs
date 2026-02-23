@@ -19,6 +19,7 @@ internal static class EndGamePatch
 {
     public static Dictionary<byte, string> SummaryText = [];
     public static string KillLog = string.Empty;
+    public static string RoleChangeLog = string.Empty;
 
     public static void Postfix()
     {
@@ -73,6 +74,25 @@ internal static class EndGamePatch
 
         KillLog = sb.Append("</size>").ToString();
         if (!KillLog.Contains('\n')) KillLog = string.Empty;
+        
+        sb.Clear();
+
+        foreach ((byte id, PlayerState state) in Main.PlayerStates)
+        {
+            if (state.RoleHistory.Count > 0)
+            {
+                string join = string.Join(" > ", state.RoleHistory.ConvertAll(x => x.ToColoredString()));
+                sb.AppendLine($"{id.ColoredPlayerName()}: {join} > {state.MainRole.ToColoredString()}");
+            }
+        }
+
+        if (sb.Length > 0)
+        {
+            sb.Insert(0, $"<size=70%>{GetString("RoleHistoryText")}\n");
+            RoleChangeLog = sb.ToString().Trim() + "</size>";
+        }
+        else
+            RoleChangeLog = string.Empty;
 
         Main.NormalOptions.KillCooldown = Options.DefaultKillCooldown;
 

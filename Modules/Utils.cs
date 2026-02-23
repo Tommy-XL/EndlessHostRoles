@@ -1528,21 +1528,8 @@ public static class Utils
 
         if (Options.CurrentGameMode != CustomGameMode.Standard) return;
 
-        sb.Clear();
-
-        foreach ((byte id, PlayerState state) in Main.PlayerStates)
-        {
-            if (state.RoleHistory.Count > 0)
-            {
-                string join = string.Join(" > ", state.RoleHistory.ConvertAll(x => x.ToColoredString()));
-                sb.AppendLine($"{id.ColoredPlayerName()}: {join} > {state.MainRole.ToColoredString()}");
-            }
-        }
-
-        if (sb.Length == 0) return;
-
-        sb.Insert(0, $"<size=70%>{GetString("RoleHistoryText")}\n");
-        SendMessage("\n", playerId, sb.ToString().Trim() + "</size>");
+        if (EndGamePatch.RoleChangeLog != string.Empty)
+            SendMessage("\n", playerId, EndGamePatch.RoleChangeLog);
     }
 
     public static void ShowKillLog(byte playerId = byte.MaxValue)
