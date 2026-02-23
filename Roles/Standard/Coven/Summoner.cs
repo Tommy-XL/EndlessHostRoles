@@ -172,6 +172,19 @@ public class Summoner : CovenBase
         Changed = true;
     }
 
+    public override void OnReportDeadBody()
+    {
+        SummonedPlayerTimer?.Dispose();
+        SummonedPlayerTimer = null;
+        Main.PlayerStates[SummonedPlayerId].SetDead();
+        SummonedPlayerId = byte.MaxValue;
+        Utils.SendRPC(CustomRPC.SyncRoleData, SummonerId, 2);
+        PlayerControl summoned = SummonedPlayerId.GetPlayer();
+        if (!summoned || !summoned.IsAlive()) return;
+        summoned.RpcExileV2();
+        summoned.RpcSetCustomRole(SummonedPlayerRole);
+    }
+
     public override void OnVoteKick(PlayerControl pc, PlayerControl target)
     {
         string command = $"/summon {target.PlayerId}";
