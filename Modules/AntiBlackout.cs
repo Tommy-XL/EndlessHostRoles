@@ -128,9 +128,7 @@ public static class AntiBlackout
                         if (pc.AmOwner && Utils.TempReviveHostRunning) continue;
                         
                         // Ensure that the players who are considered dead by the mod are actually dead in the game.
-                        pc.Exiled();
-                        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(pc.NetId, 4, SendOption.Reliable);
-                        AmongUsClient.Instance.FinishRpcImmediately(writer);
+                        pc.RpcSetRoleGlobal(pc.GetGhostRoleBasis());
                         
                         if (GhostRolesManager.AssignedGhostRoles.TryGetValue(pc.PlayerId, out var ghostRole) && ghostRole.Instance.RoleTypes == RoleTypes.GuardianAngel)
                             pc.RpcResetAbilityCooldown();
