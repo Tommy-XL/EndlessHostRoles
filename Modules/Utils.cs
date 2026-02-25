@@ -346,7 +346,7 @@ public static class Utils
     {
         if (seer.Is(CustomRoles.GM) || seer.Is(CustomRoles.Seer)) return true;
 
-        if (!seer.IsAlive() || killer == seer || target == seer) { } //return false;
+        // if (!seer.IsAlive() || killer == seer || target == seer) return false;
 
         return false;
     }
@@ -442,7 +442,7 @@ public static class Utils
 
     public static string GetRoleMode(CustomRoles role, bool parentheses = true)
     {
-        if (Options.HideGameSettings.GetBool() && Main.AllPlayerControls.Count > 1) return string.Empty;
+        if (Options.HideGameSettings.GetBool() && PlayerControl.AllPlayerControls.Count > 1) return string.Empty;
 
         string mode;
 
@@ -756,7 +756,7 @@ public static class Utils
     {
         if (GameStates.IsLobby) return false;
         if (p.Tasks == null) return false;
-        if (p.Role == null) return false;
+        if (!p.Role) return false;
 
         var hasTasks = true;
         PlayerState state = Main.PlayerStates[p.PlayerId];
