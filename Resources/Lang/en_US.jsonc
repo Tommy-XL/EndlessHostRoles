@@ -3887,7 +3887,7 @@
   "Bloodmoon.Duration": "Time After Target Dies",
   "Bloodmoon.Speed": "<#ff1919>Bloodmoon</color> Speed",
   "Bloodmoon.Suffix": "<{1}>You will die in <{2}>{0}s</color></color>",
-  "BloodmoonNearYou": "<#ffff00>The {0} is near you! Stay away to avoid death!</color>",
+  "BloodmoonNearYou": "<size=70%>The {0} is near you! Stay away to avoid death!</size>",
   "Facilitator": "Facilitator",
   "FacilitatorInfo": "Give Necronomicon",
   "FacilitatorInfoLong": "(Coven Ghost):\\nAs the Facilitator, you can protect a Coven member to give them the Necronomicon. (Protecting a non-Coven member or one who already has the Necronomicon does nothing.)",
