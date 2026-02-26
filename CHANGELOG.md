@@ -15,7 +15,7 @@
 
 ## Changes
 - **Major performance improvement**
-- There are now 20 presets instead of 10
+- There are now 20 preset slots instead of 10
 - Natural Disasters: If more rooms are collapsed than not, it shows the list of available buildings instead of the collapsed ones
 - Viper can't get Swift
 - FFA: Settings now _prevent_ you from entering vents instead of kicking you out of them
@@ -23,6 +23,8 @@
 - Car propel stops in Lower Engine and Upper Engine on Skeld and Dleks
 - President decree numbers 0-5 ⇒ 1-6
 - Trapster fake body parents are now random players
+- Hot Potato: if holders pass via kill button, proximity passing is disabled
+- Host can hold CTRL while sending a /r command to show the description to everyone
 - Phantom can no longer kill while invisible woooooooooooo
 
 ## Additions
@@ -37,5 +39,13 @@
 - Setting: `Game Time Limit Runs During Meetings`
 - Setting: `Add-on Assigning Roles Ignore the Maximum Add-ons Limit`
 - Onbound setting: `Maximum Distinct Guessing Attempts Blocked`
+
+### Preset Explorer
+- New tab in the settings UI: PRESET EXPLORER
+- A select few trusted people can upload their presets to the online database
+- All users can see a list of uploaded presets inside this tab
+- Clicking the ▶ button next to a listed preset downloads it and applies it to your current preset
+> [!WARNING]
+> **IT OVERRIDES YOUR CURRENT PRESET, BACK IT UP OR SWITCH TO ANOTHER PRESET SLOT TO INSTALL IT OVER**
 
 ---

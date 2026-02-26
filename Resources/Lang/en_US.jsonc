@@ -4426,7 +4426,7 @@
   "GameModeTutorial.HotPotato": "<size=90%>The current game mode is <#e8cd46>Hot Potato</color>.</size>\\n<size=80%>The person with a black name holds the hot potato.\\nThey can pass it to someone by going near them.\\nThe previous holder's name is colored in cyan, they cannot regain\\nthe hot potato until someone else got it, unless only 2 players remain.\\nWhen the time limit ends, the holder of the hot potato dies, and the timer resets,\\nthe hot potato is assigned to a random player. Be the last player alive to win!</size>",
   "HotPotato_ExtraTimeOnAirship": "Extra Time on <color=#ed0007>Airship</color>",
   "HotPotato_ExtraTimeOnFungle": "Extra Time on <color=#ffa646>Fungle</color>",
-  "HotPotato_HolderCanPassViaKillButton": "Holders Can Pass The Potato Via Kill Button",
+  "HotPotato_HolderCanPassViaKillButton": "Holders Pass The Potato Via Kill Button Instead Of Proximity",
   "HotPotato_HolderHasArrowToNearestPlayerIfPlayersLessThan": "Holder Has an Arrow to the Nearest Player If the Remaining Players Is Less Than",
   "HotPotato_HolderSpeed": "Speed of the Player Holding the Hot Potato",
   "HotPotato_HoldingNotify": "<#ffff00><size=2>You hold the Hot Potato! Pass it or die!</size></color>",

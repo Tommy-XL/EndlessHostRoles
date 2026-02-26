@@ -604,7 +604,7 @@ internal static class GameEndChecker
 
             var aapc = Main.AllAlivePlayerControls;
 
-            List<CustomRoles> existingAliveRoles = aapc.Select(x => x.GetCustomRole()).ToList();
+            List<CustomRoles> existingAliveRoles = aapc.Select(x => x.Is(CustomRoles.Bloodlust) ? CustomRoles.Bloodlust : x.GetCustomRole()).ToList();
             List<CountTypes> existingAliveCountTypes = aapc.Select(x => x.GetCountTypes()).ToList();
 
             if (existingAliveRoles.Contains(CustomRoles.Sunnyboy) && aapc.Count > 1 && aapc.Any(x => x.CanUseKillButton() && !x.IsCrewmate())) return false;
@@ -709,7 +709,7 @@ internal static class GameEndChecker
                     Logger.Info($"Crew: {crew}, Imp: {imp}, Coven: {coven}", "CheckGameEndPatch.CheckGameEndByLivingPlayers");
                     ResetAndSetWinner((CustomWinner)winner);
 
-                    if (winner == CustomWinner.Crewmate && aapc.All(x => x.GetCustomRole().IsNeutral()))
+                    if (winner == CustomWinner.Crewmate && existingAliveRoles.TrueForAll(x => x.IsNeutral()))
                     {
                         AdditionalWinnerTeams.Add(AdditionalWinners.AliveNeutrals);
                         WinnerIds.UnionWith(aapc.Select(x => x.PlayerId));
