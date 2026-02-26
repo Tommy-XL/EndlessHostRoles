@@ -97,8 +97,11 @@ public static class OnlinePresetsManager
             row.MinusBtn.OnClick.AddListener((UnityAction)(() =>
             {
                 GameSettingMenu.Instance.Close();
+                
                 Prompt.Show(Translator.GetString("Promt.ApplyPreset"), () =>
                 {
+                    Logger.SendInGame(Translator.GetString("DownloadingPreset"));
+                    
                     Main.Instance.StartCoroutine(
                         DownloadPreset(preset.id, downloadedPreset =>
                         {
@@ -112,11 +115,7 @@ public static class OnlinePresetsManager
                             OptionItem.SyncAllOptions();
                             OptionSaver.Save();
                             
-                            LateTask.New(() =>
-                            {
-                                if (!GameStates.IsLobby) return;
-                                GameObject.Find("Host Buttons").transform.FindChild("Edit").GetComponent<PassiveButton>().ReceiveClickDown();
-                            }, 0.1f);
+                            Logger.SendInGame(Translator.GetString("PresetApplied"), Color.green);
                         })
                     );
                 }, () =>
@@ -234,6 +233,8 @@ public static class OnlinePresetsManager
     private static IEnumerator DownloadPreset(string presetId, Action<Dictionary<int,int>> onSuccess)
     {
         UnityWebRequest request = UnityWebRequest.Get($"https://gurge44.pythonanywhere.com/presets/{presetId}");
+
+        request.timeout = 5;
 
         yield return request.SendWebRequest();
 

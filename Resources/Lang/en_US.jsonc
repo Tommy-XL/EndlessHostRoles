@@ -10440,6 +10440,8 @@
   ============================== */
   "PressF1ShowMainRoleDes": "F1: Show Full Role/Add-ons Info\\n<size=60%>On the joystick use the right stick (R3/RSB)</size>",
   "PromotedSKCanRecruit": "New <color=#00b4eb>Jackal</color> can recruit new <color=#00b4eb>Sidekick</color>",
+  "DownloadingPreset": "Downloading preset....",
+  "PresetApplied": "Preset applied successfully!",
   "Promt.ApplyPreset": "<#ffff00>⚠ WARNING ⚠</color>\\nApplying this preset <b><u>OVERRIDES</u> your current preset</b>! Back it up if you need it or switch to an unused preset slot. It will be permanently deleted!\\nDo you wish to proceed?",
   "Promt.EnableAllRoles": "Enable all roles and add-ons?<size=80%>\\n\\n<b>Yes</b> - Enable all roles and add-ons\\n<b>No</b> - Enter the quick setup dialog of roles and add-ons</size>",
   "Promt.EnableRole": "<size=60%>({0}/{1}) {2}\\n</size><size=80%>Enable {3}?</size><size=60%>\\n\\n{4}</size>",
