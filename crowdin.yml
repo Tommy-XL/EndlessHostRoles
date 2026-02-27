@@ -5,4 +5,4 @@ bundles:
   - 2
 files:
   - source: /Resources/Lang/en_US.jsonc
-    translation: /Resources/Lang/%locale_with_underscore%.json
+    translation: /Resources/Lang/%locale_with_underscore%.jsonc
