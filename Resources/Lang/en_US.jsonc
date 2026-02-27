@@ -3226,6 +3226,8 @@
   "Tremor.DoomTime": "Doom Time (= Time to Kill Everyone)",
   "Tremor.TimerDecrease": "When Killing, Timer Decreases by",
   "Tremor.TimerStart": "Time Until Doom Happens",
+  "Tremor.SpeedDuringDoom": "<#e942f5>Tremor</color>'s Speed During Doom",
+  "Tremor.VisionDuringDoom": "<#e942f5>Tremor</color>'s Vision During Doom",
   "Vector": "Vector",
   "VectorInfo": "Jump in, jump out, win!",
   "VectorInfoLong": "(Neutrals):\\nVector will win alone by venting a certain number of times.",
