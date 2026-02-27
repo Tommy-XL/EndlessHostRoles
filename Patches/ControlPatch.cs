@@ -213,7 +213,7 @@ internal static class ControllerManagerUpdatePatch
                 }
             }
 
-            if (KeysDown(KeyCode.Return, KeyCode.E, KeyCode.LeftShift) && GameStates.IsInGame)
+            if (KeysDown(KeyCode.Return, KeyCode.E, KeyCode.LeftShift) && GameStates.IsInGame && PlayerControl.LocalPlayer.IsAlive())
             {
                 Main.PlayerStates[PlayerControl.LocalPlayer.PlayerId].deathReason = PlayerState.DeathReason.etc;
                 PlayerControl.LocalPlayer.RpcExileV2();
