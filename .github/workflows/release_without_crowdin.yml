@@ -1,4 +1,4 @@
-name: Build & Release EHR
+name: Build & Release EHR Without Crowdin Updates
 
 on:
   workflow_dispatch:
@@ -36,7 +36,6 @@ jobs:
   # ---------------------------------------------------------
   build-control-panel:
     runs-on: windows-latest
-    needs: [prepare-build]
     steps:
       - uses: actions/checkout@v4
 
