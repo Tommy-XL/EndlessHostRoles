@@ -1318,7 +1318,7 @@ internal static class IntroCutsceneDestroyPatch
                     Blessed.AfterMeetingTasks();
                     break;
                 case CustomGameMode.FFA:
-                    LateTask.New(() => Main.AllAlivePlayerControls.Do(x => x.RpcSetRoleDesync(RoleTypes.Impostor, x.OwnerId)), 6f);
+                    LateTask.New(() => Main.EnumerateAlivePlayerControls().Do(x => x.RpcSetRoleDesync(RoleTypes.Impostor, x.OwnerId)), 6f);
                     break;
                 case CustomGameMode.KingOfTheZones:
                     Main.Instance.StartCoroutine(KingOfTheZones.GameStart());
