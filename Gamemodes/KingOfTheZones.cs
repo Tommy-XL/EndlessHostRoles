@@ -249,7 +249,7 @@ public static class KingOfTheZones
         AllRooms.RemoveWhere(x => x.ToString().Contains("Decontamination"));
         if (SubmergedCompatibility.IsSubmerged()) AllRooms.RemoveWhere(x => (byte)x > 135);
 
-        Zones = DefaultZones[Main.CurrentMap][NumZones.GetInt() - 1];
+        Zones = Main.LIMap ? ShipStatus.Instance.AllRooms.Select(x => x.RoomId).TakeRandomToList(NumZones.GetInt()) : DefaultZones[Main.CurrentMap][NumZones.GetInt() - 1];
 
         Points = Enum.GetValues<KOTZTeam>().ToDictionary(x => x, _ => 0);
         PlayerPoints = Main.PlayerStates.Keys.ToDictionary(x => x, _ => 0);
@@ -449,24 +449,41 @@ public static class KingOfTheZones
                 yield return StartingCountdown();
         }
 
-        KeyValuePair<SystemTypes, Vector2>[] spawnsConst = RandomSpawn.SpawnMap.GetSpawnMap().Positions.ExceptBy(Zones, x => x.Key).ToArray();
-        List<KeyValuePair<SystemTypes, Vector2>> spawns = spawnsConst.ToList();
-
-        foreach (PlayerControl player in aapc)
+        if (!Main.LIMap)
         {
-            try
+            KeyValuePair<SystemTypes, Vector2>[] spawnsConst = RandomSpawn.SpawnMap.GetSpawnMap().Positions.ExceptBy(Zones, x => x.Key).ToArray();
+            List<KeyValuePair<SystemTypes, Vector2>> spawns = spawnsConst.ToList();
+
+            foreach (PlayerControl player in aapc)
             {
-                player.SetKillCooldown(GetKillCooldown(player));
+                try
+                {
+                    player.SetKillCooldown(GetKillCooldown(player));
 
-                KeyValuePair<SystemTypes, Vector2> spawn = spawns.RandomElement();
-                player.TP(spawn.Value);
-                spawns.RemoveAll(x => x.Key == spawn.Key);
+                    KeyValuePair<SystemTypes, Vector2> spawn = spawns.RandomElement();
+                    player.TP(spawn.Value);
+                    spawns.RemoveAll(x => x.Key == spawn.Key);
 
-                if (spawns.Count == 0) spawns = spawnsConst.ToList();
+                    if (spawns.Count == 0) spawns = spawnsConst.ToList();
+                }
+                catch (Exception e) { Utils.ThrowException(e); }
+
+                yield return null;
             }
-            catch (Exception e) { Utils.ThrowException(e); }
+        }
+        else
+        {
+            foreach (PlayerControl player in aapc)
+            {
+                try
+                {
+                    player.SetKillCooldown(GetKillCooldown(player));
+                    player.TPToRandomVent();
+                }
+                catch (Exception e) { Utils.ThrowException(e); }
 
-            yield return null;
+                yield return null;
+            }
         }
 
         TimeLeft = GameEndsByTimeLimit.GetBool() ? MaxGameLength.GetInt() : 0;
@@ -817,7 +834,10 @@ public static class KingOfTheZones
                                 if (!player) continue;
 
                                 player.ReviveFromTemporaryExile();
-                                player.TP(RandomSpawn.SpawnMap.GetSpawnMap().Positions.ExceptBy(Zones, x => x.Key).RandomElement().Value);
+                                
+                                if (!Main.LIMap) player.TP(RandomSpawn.SpawnMap.GetSpawnMap().Positions.ExceptBy(Zones, x => x.Key).RandomElement().Value);
+                                else player.TPToRandomVent();
+                                
                                 RPC.PlaySoundRPC(player.PlayerId, Sounds.SpawnSound);
                                 Utils.NotifyRoles(SpecifyTarget: player, SendOption: SendOption.None);
 

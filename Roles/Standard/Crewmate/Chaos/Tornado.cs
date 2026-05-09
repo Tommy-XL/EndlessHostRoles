@@ -60,10 +60,8 @@ internal class Tornado : RoleBase
             Map = RandomSpawn.SpawnMap.GetSpawnMap();
             CanUseMap = true;
         }
-        catch (ArgumentOutOfRangeException)
+        catch
         {
-            Logger.CurrentMethod();
-            Logger.Error("Unsupported Map", "Torando");
             CanUseMap = false;
         }
     }

@@ -221,11 +221,14 @@ public static class Snowdown
         Data = Main.EnumeratePlayerControls().ToDictionary(x => x.PlayerId, _ => new PlayerData());
         Snowballs = [];
         
-        Dictionary<SystemTypes, Vector2>.ValueCollection rooms = RandomSpawn.SpawnMap.GetSpawnMap().Positions?.Values;
+        List<Vector2> rooms = Main.LIMap
+            ? ShipStatus.Instance.AllRooms.Select(x => new Vector2(x.transform.position.x, x.transform.position.y)).ToList()
+            : RandomSpawn.SpawnMap.GetSpawnMap().Positions?.Values.ToList();
+        
         if (rooms == null) return;
 
-        float[] x = rooms.Select(r => r.x).ToArray();
-        float[] y = rooms.Select(r => r.y).ToArray();
+        List<float> x = rooms.ConvertAll(r => r.x);
+        List<float> y = rooms.ConvertAll(r => r.y);
 
         const float extend = 5f;
         MapBounds = ((x.Min() - extend, x.Max() + extend), (y.Min() - extend, y.Max() + extend));

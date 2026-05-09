@@ -1179,7 +1179,7 @@ internal static class IntroCutsceneDestroyPatch
                 case CustomGameMode.HideAndSeek when CustomHnS.Chat:
                 case CustomGameMode.NaturalDisasters when NaturalDisasters.Chat:
                 case CustomGameMode.Standard when Options.ChatDuringGame.GetBool():
-                    LateTask.New(Utils.SetChatVisibleForAll, 4f);
+                    LateTask.New(() => Main.AllAlivePlayerControls.SetChatVisible(true), 4f);
                     break;
             }
 
@@ -1283,7 +1283,7 @@ internal static class IntroCutsceneDestroyPatch
             }
             catch (Exception e) { Utils.ThrowException(e); }
 
-            if (Options.RandomSpawn.GetBool() && Main.CurrentMap != MapNames.Airship && AmongUsClient.Instance.AmHost && Options.CurrentGameMode is not CustomGameMode.CaptureTheFlag and not CustomGameMode.KingOfTheZones and not CustomGameMode.BedWars and not CustomGameMode.Deathrace)
+            if (Options.RandomSpawn.GetBool() && Main.CurrentMap != MapNames.Airship && !Main.LIMap && AmongUsClient.Instance.AmHost && Options.CurrentGameMode is not CustomGameMode.CaptureTheFlag and not CustomGameMode.KingOfTheZones and not CustomGameMode.BedWars and not CustomGameMode.Deathrace)
             {
                 var map = RandomSpawn.SpawnMap.GetSpawnMap();
                 aapc.Do(map.RandomTeleport);
@@ -1410,7 +1410,7 @@ internal static class IntroCutsceneDestroyPatch
             
             if (!AmongUsClient.Instance.AmHost || !Lovers.PrivateChat.GetBool()) return;
             
-            Main.LoversPlayers.ForEach(x => x.SetChatVisible(true));
+            Main.LoversPlayers.SetChatVisible(true);
         }, 1f, log: false);
 
         LateTask.New(() =>

@@ -340,7 +340,7 @@ public static class TheMindGame
 
         Main.Instance.StartCoroutine(PreventMovingOutOfGroupRooms());
 
-        Utils.SetChatVisibleForAll();
+        Main.AllAlivePlayerControls.SetChatVisible(true);
 
         yield return NotifyEveryone("TMG.Tutorial.Basics", 6);
         if (Stop) yield break;

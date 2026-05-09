@@ -696,11 +696,8 @@ internal static class SetHudActivePatch
 [HarmonyPatch(typeof(AbilityButton), nameof(AbilityButton.SetFromSettings))]
 static class AbilityButtonSetFromSettingsPatch
 {
-    public static Exception Finalizer(Exception __exception)
+    public static Exception Finalizer()
     {
-        if (__exception != null)
-            Utils.ThrowException(__exception);
-
         return null;
     }
 }
@@ -708,11 +705,8 @@ static class AbilityButtonSetFromSettingsPatch
 [HarmonyPatch(typeof(ActionButton), nameof(ActionButton.SetEnabled))]
 static class ActionButtonSetEnabledPatch
 {
-    public static Exception Finalizer(Exception __exception)
+    public static Exception Finalizer()
     {
-        if (__exception != null)
-            Utils.ThrowException(__exception);
-
         return null;
     }
 }

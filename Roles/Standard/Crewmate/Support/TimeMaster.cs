@@ -226,18 +226,14 @@ internal class TimeMaster : RoleBase
 
         if (!commsSaboActive)
         {
-            switch (Main.NormalOptions.MapId)
+            doComms = Main.NormalOptions.MapId switch
             {
-                case 2:
-                    doComms |= FastVector2.DistanceWithinRange(pos, DisableDevice.DevicePos["PolusVital"], usableDistance);
-                    break;
-                case 4:
-                    doComms |= FastVector2.DistanceWithinRange(pos, DisableDevice.DevicePos["AirshipVital"], usableDistance);
-                    break;
-                case 5:
-                    doComms |= FastVector2.DistanceWithinRange(pos, DisableDevice.DevicePos["FungleVital"], usableDistance);
-                    break;
-            }
+                2 => FastVector2.DistanceWithinRange(pos, DisableDevice.DevicePos["PolusVital"], usableDistance),
+                4 => FastVector2.DistanceWithinRange(pos, DisableDevice.DevicePos["AirshipVital"], usableDistance),
+                5 => FastVector2.DistanceWithinRange(pos, DisableDevice.DevicePos["FungleVital"], usableDistance),
+                6 when SubmergedCompatibility.IsSubmerged() => FastVector2.DistanceWithinRange(pos, DisableDevice.DevicePos["SubmergedVital"], usableDistance),
+                _ => false
+            };
         }
 
         var sender = CustomRpcSender.Create("DisableDevice.FixedUpdate", SendOption.Reliable, log: false);

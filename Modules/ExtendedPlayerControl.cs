@@ -192,7 +192,7 @@ internal static class ExtendedPlayerControl
             player.Visible = false;
         }
 
-        public void SetChatVisible(bool visible)
+        public void SetChatVisible(bool visible, MessageWriter packedWriter = null)
         {
             if (!AmongUsClient.Instance.AmHost) return;
         
@@ -213,10 +213,14 @@ internal static class ExtendedPlayerControl
                 return;
             }
 
-            DataFlagRateLimiter.Enqueue(() =>
+            if (packedWriter == null) DataFlagRateLimiter.Enqueue(Action, calls: 3);
+            else Action();
+            return;
+
+            void Action()
             {
                 bool dead = player.Data.IsDead;
-                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+                MessageWriter writer = packedWriter ?? MessageWriter.Get(SendOption.Reliable);
                 writer.StartMessage(6);
                 writer.Write(AmongUsClient.Instance.GameId);
                 writer.WritePacked(player.OwnerId);
@@ -250,9 +254,10 @@ internal static class ExtendedPlayerControl
                 writer.WritePacked(netIdCnt);
                 writer.EndMessage();
                 writer.EndMessage();
+                if (packedWriter != null) return;
                 AmongUsClient.Instance.SendOrDisconnect(writer);
                 writer.Recycle();
-            }, calls: 3);
+            }
         }
 
         public ClientData GetClient()
@@ -751,7 +756,7 @@ internal static class ExtendedPlayerControl
                 MapNames.Skeld or MapNames.Dleks when room => true,
                 MapNames.Polus when overlapPointNonAlloc >= 1 => true,
                 MapNames.Polus when pos.y is >= -26.11f and <= -6.41f && pos.x is >= 3.56f and <= 32.68f => true,
-                (MapNames)6 => true,
+                (MapNames)6 or (MapNames)7 => true,
                 _ => false
             };
         }
@@ -1037,7 +1042,7 @@ internal static class ExtendedPlayerControl
 
         public void SyncSettings()
         {
-            PlayerGameOptionsSender.SendImmediately(player.PlayerId);
+            PlayerGameOptionsSender.ForceSendImmediately(player.PlayerId);
         }
 
         public TaskState GetTaskState()

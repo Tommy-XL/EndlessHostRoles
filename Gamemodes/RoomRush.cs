@@ -713,7 +713,8 @@ public static class RoomRush
         if (WinByPointsInsteadOfDeaths.GetBool())
             Points = Main.EnumeratePlayerControls().ToDictionary(x => x.PlayerId, _ => 0);
 
-        Map = RandomSpawn.SpawnMap.GetSpawnMap();
+        try { Map = RandomSpawn.SpawnMap.GetSpawnMap(); }
+        catch { }
 
         yield return new WaitForSecondsRealtime(Main.CurrentMap == MapNames.Airship ? 8f : 3f);
 
@@ -850,7 +851,7 @@ public static class RoomRush
             {
                 MapNames.MiraHQ => previous is SystemTypes.Laboratory or SystemTypes.Reactor ^ RoomGoal is SystemTypes.Laboratory or SystemTypes.Reactor,
                 MapNames.Polus => previous == SystemTypes.Specimens || RoomGoal == SystemTypes.Specimens,
-                (MapNames)6 => (previous == (SystemTypes)SubmergedCompatibility.SubmergedSystemTypes.Ballast) ^ (RoomGoal == (SystemTypes)SubmergedCompatibility.SubmergedSystemTypes.Ballast),
+                (MapNames)6 => previous == (SystemTypes)SubmergedCompatibility.SubmergedSystemTypes.Ballast || RoomGoal == (SystemTypes)SubmergedCompatibility.SubmergedSystemTypes.Ballast,
                 _ => false
             };
 

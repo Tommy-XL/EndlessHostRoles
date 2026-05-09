@@ -1228,24 +1228,29 @@ internal static class ReportDeadBodyPatch
         {
             try
             {
-                Main.PlayerStates.Values.DoIf(x => !x.IsDead, x => x.IsBlackOut = true);
-                Main.EnumerateAlivePlayerControls().Do(x => x.SyncSettings());
+                Main.PlayerStates.Values.DoIf(x => !x.IsDead, x =>
+                {
+                    x.IsBlackOut = true;
+                    x.Player.MarkDirtySettings();
+                });
+                PlayerGameOptionsSender.SendAllImmediately();
             }
             catch (Exception e) { ThrowException(e); }
         }
         
         LateTask.New(() =>
         {
-            Main.PlayerStates.Values.Do(x => x.IsBlackOut = false);
-            MarkEveryoneDirtySettings();
-        }, 3f, "RemoveBlackout");
+            Main.PlayerStates.Values.DoIf(x => x.IsBlackOut, x =>
+            {
+                x.IsBlackOut = false;
+                x.Player.MarkDirtySettings();
+            });
+        }, 15f, "RemoveBlackout");
         
         if (Main.GameTimer.IsRunning && !Options.GameTimeLimitRunsDuringMeetings.GetBool())
             Main.GameTimer.Stop();
-
-        var allCNO = CustomNetObject.AllObjects.ToArray();
         
-        foreach (CustomNetObject cno in allCNO)
+        foreach (CustomNetObject cno in CustomNetObject.AllObjects)
         {
             try
             {
@@ -1259,7 +1264,7 @@ internal static class ReportDeadBodyPatch
         
         LateTask.New(() =>
         {
-            foreach (CustomNetObject cno in allCNO)
+            foreach (CustomNetObject cno in CustomNetObject.AllObjects)
             {
                 try
                 {

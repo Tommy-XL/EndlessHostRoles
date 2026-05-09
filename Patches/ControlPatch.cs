@@ -133,7 +133,7 @@ internal static class ControllerManagerUpdatePatch
             }
 
             if (KeysDown(KeyCode.Return, KeyCode.C, KeyCode.LeftShift, KeyCode.LeftControl) && GameStates.IsInGame)
-                Utils.SetChatVisibleForAll();
+                Main.AllAlivePlayerControls.SetChatVisible(true);
 
             if (KeysDown(KeyCode.Return, KeyCode.M, KeyCode.LeftShift) && GameStates.IsInGame)
             {

@@ -370,7 +370,7 @@ public static class Mingle
                 if (TimeEndTS == now && PlayerControl.AllPlayerControls.Count < 50)
                 {
                     Main.AllPlayerSpeed.SetAllValues(Main.MinSpeed);
-                    Main.EnumerateAlivePlayerControls().Do(x => x.SyncSettings());
+                    Utils.SyncAllSettings();
                 }
                 else if (TimeEndTS < now)
                 {

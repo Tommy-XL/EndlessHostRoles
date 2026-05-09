@@ -139,6 +139,8 @@ public static class NaturalDisasters
         if (Options.CurrentGameMode != CustomGameMode.NaturalDisasters && !Options.IntegrateNaturalDisasters.GetBool()) return;
 
         FixedUpdatePatch.WaitTime = Chat ? 10 : 5;
+        
+        RebuildSuffixText();
 
         List<Vector2> rooms = Main.LIMap
             ? ShipStatus.Instance.AllRooms.Select(x => new Vector2(x.transform.position.x, x.transform.position.y)).ToList()
@@ -151,8 +153,6 @@ public static class NaturalDisasters
 
         const float extend = 5f;
         MapBounds = ((x.Min() - extend, x.Max() + extend), (y.Min() - extend, y.Max() + extend));
-        
-        RebuildSuffixText();
     }
 
     public static void ApplyGameOptions(IGameOptions opt, byte id)

@@ -490,13 +490,13 @@ internal class Chemist : RoleBase
         Factory beforeFactory = CurrentFactory;
         PlainShipRoom room = pc.GetPlainShipRoom();
 
-        if (ItemCounts[Item.ThermalWater] < 50 && room != null && room.RoomId == HottestRoom[Main.CurrentMap])
+        if (ItemCounts[Item.ThermalWater] < 50 && room && room.RoomId == HottestRoom[Main.CurrentMap])
         {
             ItemCounts[Item.ThermalWater]++;
             Utils.SendRPC(CustomRPC.SyncRoleData, pc.PlayerId, 1, (int)Item.ThermalWater, 1);
         }
 
-        if (room != null)
+        if (room)
         {
             CurrentFactory = FactoryLocations.GetValueOrDefault(room.RoomId);
             Utils.SendRPC(CustomRPC.SyncRoleData, pc.PlayerId, 3, (int)CurrentFactory);

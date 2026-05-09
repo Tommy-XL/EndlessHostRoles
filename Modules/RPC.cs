@@ -588,7 +588,7 @@ internal static class RPCHandlerPatch
                     var cno = reader.ReadNetObject<PlayerControl>();
                     bool active = reader.ReadBoolean();
 
-                    if (cno != null)
+                    if (cno)
                     {
                         cno.transform.FindChild("Names").FindChild("NameText_TMP").gameObject.SetActive(active);
                         cno.Collider.enabled = false;

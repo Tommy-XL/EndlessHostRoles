@@ -13,7 +13,7 @@ namespace EHR;
 internal static class DisableDevice
 {
     public static readonly List<byte> DesyncComms = [];
-    private static int frame;
+    private static int Frame;
 
     public static readonly Dictionary<string, Vector2> DevicePos = new()
     {
@@ -39,7 +39,7 @@ internal static class DisableDevice
         ["SubmergedCamera"] = new(-3.41f, -34.56f)
     };
 
-    public static bool DoDisable => Options.DisableDevices.GetBool();
+    private static bool DoDisable => Options.DisableDevices.GetBool();
 
     public static float UsableDistance => Main.CurrentMap switch
     {
@@ -54,8 +54,8 @@ internal static class DisableDevice
 
     public static void FixedUpdate()
     {
-        frame = frame == 3 ? 0 : ++frame;
-        if (frame != 0) return;
+        Frame = Frame == 3 ? 0 : ++Frame;
+        if (Frame != 0) return;
 
         bool rogueForce = Rogue.On && Main.PlayerStates.Values.Any(x => x.Role is Rogue { DisableDevices: true });
 

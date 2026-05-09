@@ -617,7 +617,6 @@ public static class GuessManager
 
                 playerVoteArea.UnsetVote();
                 meetingHud.SetDirtyBit(1U);
-                AmongUsClient.Instance.SendAllStreamedObjects();
 
                 PlayerControl voteAreaPlayer = Utils.GetPlayerById(playerVoteArea.TargetPlayerId);
                 if (!voteAreaPlayer) continue;
@@ -626,7 +625,6 @@ public static class GuessManager
                 {
                     meetingHud.RpcClearVote(voteAreaPlayer.OwnerId);
                     meetingHud.SetDirtyBit(1U);
-                    AmongUsClient.Instance.SendAllStreamedObjects();
                 }
                 else
                     meetingHud.ClearVote();
@@ -668,10 +666,8 @@ public static class GuessManager
             if (AmongUsClient.Instance.AmHost)
             {
                 meetingHud.SetDirtyBit(1U);
-                AmongUsClient.Instance.SendAllStreamedObjects();
                 meetingHud.RpcClearVote(pc.OwnerId);
                 meetingHud.SetDirtyBit(1U);
-                AmongUsClient.Instance.SendAllStreamedObjects();
             }
         }
 
@@ -1427,7 +1423,7 @@ public static class GuessManager
                 for (var i = 0; i < alivePlayerControls.Count && (skipped ? i - 1 : i) < data.Length; i++)
                 {
                     string choice = data[skipped ? i - 1 : i].choice;
-                    string namePlateId = data[skipped ? i - 1 : i].namePlateId;
+                    //string namePlateId = data[skipped ? i - 1 : i].namePlateId;
                     PlayerControl pc = alivePlayerControls[i];
 
                     if (pc.PlayerId == guesserId)
@@ -1445,7 +1441,7 @@ public static class GuessManager
                     if (textIndex % 3 == 0) sb.AppendLine();
                     else sb.Append(' ');
 
-                    if (writer.Length > 500 || messages + 2 > packingLimit)
+                    if (writer.Length > 500 || messages >= packingLimit)
                     {
                         messages = 0;
                         writer.EndMessage();
@@ -1464,14 +1460,7 @@ public static class GuessManager
                     writer.Write(false);
                     writer.EndMessage();
 
-                    writer.StartMessage(2);
-                    writer.WritePacked(pc.NetId);
-                    writer.Write((byte)RpcCalls.SetNamePlateStr);
-                    writer.Write(namePlateId);
-                    writer.Write(pc.GetNextRpcSequenceId(RpcCalls.SetNamePlateStr));
-                    writer.EndMessage();
-
-                    messages += 2;
+                    messages++;
                 }
 
                 writer.EndMessage();

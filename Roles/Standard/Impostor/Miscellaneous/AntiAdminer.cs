@@ -353,7 +353,7 @@ internal class AntiAdminer : RoleBase
     private void OpenDoors(PlayerControl pc)
     {
         if (!IsTelecommunication) return;
-        if (pc == null) return;
+        if (!pc) return;
         if (Main.CurrentMap == MapNames.MiraHQ) return;
         
         if (pc.GetAbilityUseLimit() >= 1)
@@ -402,5 +402,4 @@ internal class AntiAdminer : RoleBase
         else
             hud.AbilityButton?.OverrideText(Translator.GetString("VeteranVentButtonText"));
     }
-
 }

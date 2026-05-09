@@ -1447,13 +1447,11 @@ internal static class MeetingHudCastVotePatch
         {
             info.SourcePVA.UnsetVote();
             info.MeetingHud.SetDirtyBit(1U);
-            AmongUsClient.Instance.SendAllStreamedObjects();
         }
         catch { }
 
         info.MeetingHud.RpcClearVote(info.SourcePC.OwnerId);
         info.MeetingHud.SetDirtyBit(1U);
-        AmongUsClient.Instance.SendAllStreamedObjects();
 
         info.SourcePVA.VotedFor = byte.MaxValue;
 
