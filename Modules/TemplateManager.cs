@@ -44,7 +44,7 @@ public static class TemplateManager
         ["InternalVersion"]      = () => Main.PluginVersion,
         ["ModVersion"]           = () => Main.PluginDisplayVersion,
         ["PlayerName"]           = () => DataManager.Player.Customization.Name,
-        ["HostName"]             = () => PlayerControl.LocalPlayer.GetRealName(),
+        ["HostName"]             = () => Main.AllPlayerNames.GetValueOrDefault(PlayerControl.LocalPlayer.PlayerId, PlayerControl.LocalPlayer.GetRealName()),
         ["Players"]              = () => string.Join(", ", Main.AllPlayerNames.Values),
         ["AlivePlayers"]         = () => string.Join(", ", Main.EnumerateAlivePlayerControls().Select(x => x.GetRealName())),
         ["DeadPlayers"]          = () => string.Join(", ", Main.EnumeratePlayerControls().Where(x => !x.IsAlive()).Select(x => x.GetRealName())),
