@@ -258,6 +258,8 @@ internal static class SoloPVP
             PlayerHP[target.PlayerId] = PlayerHPMax[target.PlayerId];
             LastHurt[target.PlayerId] = Utils.TimeStamp;
             RPC.PlaySoundRPC(target.PlayerId, Sounds.SpawnSound);
+            
+            yield return TryFixVentStuck();
 
             if (Main.LIMap) target.TPToRandomVent();
             else SpawnMap.GetSpawnMap().RandomTeleport(target);
@@ -265,9 +267,25 @@ internal static class SoloPVP
         }
         
         BackCountdown.TryAdd(target.PlayerId, waitingTime);
-        if (target.inVent || target.MyPhysics.Animations.IsPlayingEnterVentAnimation()) LateTask.New(() => target.MyPhysics.RpcExitVent(target.GetClosestVent().Id), 0.6f, log: false);
-        while (target.inVent || target.inMovingPlat || target.onLadder || target.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || target.MyPhysics.Animations.IsPlayingEnterVentAnimation()) yield return null;
-        if (BackCountdown.ContainsKey(target.PlayerId)) target.ExileTemporarily();
+
+        yield return TryFixVentStuck();
+
+        if (BackCountdown.ContainsKey(target.PlayerId))
+            target.ExileTemporarily();
+        
+        yield break;
+
+        IEnumerator TryFixVentStuck()
+        {
+            if (target.inVent || target.MyPhysics.Animations.IsPlayingEnterVentAnimation())
+            {
+                LateTask.New(() => target.MyPhysics.RpcExitVent(target.GetClosestVent().Id), 0.6f, log: false);
+                yield return new WaitForSeconds(1.3f);
+            }
+
+            while (target.inVent || target.inMovingPlat || target.onLadder || target.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || target.MyPhysics.Animations.IsPlayingEnterVentAnimation())
+                yield return null;
+        }
     }
 
     private static void OnPlayerKill(PlayerControl killer)
