@@ -93,7 +93,7 @@ public class Venerer : RoleBase
         {
             case 1:
                 var outfit = Camouflage.PlayerSkins[pc.PlayerId];
-                Utils.RpcChangeSkin(pc, new NetworkedPlayerInfo.PlayerOutfit().Set(Main.AllPlayerNames.GetValueOrDefault(VenererId, pc.GetRealName()), 15, "", "", "", "", ""));
+                Utils.RpcChangeSkin(pc, new NetworkedPlayerInfo.PlayerOutfit().Set("​", 15, "", "", "", "", ""));
                 ChangedSkin = true;
                 Utils.NotifyRoles(SpecifyTarget: pc);
                 LateTask.New(() =>
