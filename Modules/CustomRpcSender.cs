@@ -43,7 +43,7 @@ public class CustomRpcSender
     private bool packed;
 
     private State currentState = State.BeforeInit;
-    private int messages;
+    public int messages;
     public MessageWriter stream;
 
     private CustomRpcSender() { }

@@ -4516,13 +4516,16 @@ public static class Utils
 
                 DataFlagRateLimiter.Enqueue(() =>
                 {
+                    int messages = 0;
+                    int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
+
                     MessageWriter packedWriter = MessageWriter.Get(SendOption.Reliable);
                     packedWriter.StartMessage(26);
                     packedWriter.WritePacked(AmongUsClient.Instance.GameId);
 
                     foreach (PlayerControl pc in players)
                     {
-                        if (packedWriter.Length > 500)
+                        if (packedWriter.Length > 500 || messages >= packingLimit)
                         {
                             packedWriter.EndMessage();
                             AmongUsClient.Instance.SendOrDisconnect(packedWriter);
@@ -4532,6 +4535,7 @@ public static class Utils
                         }
 
                         pc.SetChatVisible(visible, packedWriter);
+                        messages++;
                     }
 
                     packedWriter.EndMessage();

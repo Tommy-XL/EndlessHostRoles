@@ -170,11 +170,13 @@ internal static class ExtendedPlayerControl
         public void FreezeForOthers()
         {
             if (!AmongUsClient.Instance.AmHost) return;
+            
+            CustomRpcSender sender = CustomRpcSender.Create($"SnapTo Freeze ({player.GetNameWithRole()})", SendOption.Reliable);
+            sender.StartPackedMessage();
         
             foreach (PlayerControl pc in Main.EnumerateAlivePlayerControls())
             {
                 if (pc == player || pc.AmOwner) continue;
-                CustomRpcSender sender = CustomRpcSender.Create($"SnapTo Freeze ({player.GetNameWithRole()})", SendOption.Reliable);
                 sender.StartMessage(pc.OwnerId);
                 sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                     .WriteVector2(player.transform.position)
@@ -185,10 +187,11 @@ internal static class ExtendedPlayerControl
                     .Write((ushort)(player.NetTransform.lastSequenceId + 16383))
                     .EndRpc();
                 sender.EndMessage();
-                sender.SendMessage();
                 NumSnapToCallsThisRound += 2;
             }
-
+            
+            sender.SendMessage();
+            
             player.Visible = false;
         }
 
@@ -1511,12 +1514,14 @@ internal static class ExtendedPlayerControl
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
                 NotifyRoles(SpecifyTarget: player);
             }
+            
+            var sender = CustomRpcSender.Create("RpcMakeInvisible", SendOption.Reliable);
+            sender.StartPackedMessage();
 
             foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner || pc == player || (!phantom && pc.IsModdedClient()) || (phantom && pc.IsImpostor())) continue;
             
-                var sender = CustomRpcSender.Create("RpcMakeInvisible", SendOption.Reliable);
                 sender.StartMessage(pc.OwnerId);
                 sender.StartRpc(player.NetTransform.NetId, RpcCalls.SnapTo)
                     .WriteVector2(new Vector2(50f, 50f))
@@ -1527,11 +1532,11 @@ internal static class ExtendedPlayerControl
                     .Write((ushort)(player.NetTransform.lastSequenceId + 16383))
                     .EndRpc();
                 sender.EndMessage();
-                sender.SendMessage();
 
                 NumSnapToCallsThisRound += 2;
             }
-
+            
+            sender.SendMessage();
             Logger.Info($"Made {player.GetNameWithRole()} invisible", "RpcMakeInvisible");
         }
 
@@ -1560,12 +1565,14 @@ internal static class ExtendedPlayerControl
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
                 NotifyRoles(SpecifyTarget: player);
             }
+            
+            var sender = CustomRpcSender.Create("RpcMakeVisible", SendOption.Reliable);
+            sender.StartPackedMessage();
 
             foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner || pc == player || (!phantom && pc.IsModdedClient()) || (phantom && pc.IsImpostor())) continue;
             
-                var sender = CustomRpcSender.Create("RpcMakeVisible", SendOption.Reliable);
                 sender.StartMessage(pc.OwnerId);
                 sender.StartRpc(player.NetTransform.NetId, RpcCalls.SnapTo)
                     .WriteVector2(new Vector2(50f, 50f))
@@ -1580,11 +1587,11 @@ internal static class ExtendedPlayerControl
                     .Write(player.NetTransform.lastSequenceId)
                     .EndRpc();
                 sender.EndMessage();
-                sender.SendMessage();
 
                 NumSnapToCallsThisRound += 3;
             }
 
+            sender.SendMessage();
             Logger.Info($"Made {player.GetNameWithRole()} visible", "RpcMakeVisible");
         }
 
@@ -1593,12 +1600,14 @@ internal static class ExtendedPlayerControl
             if (!AmongUsClient.Instance.AmHost) return;
             if (!Main.Invisible.Contains(player.PlayerId)) return;
             if (phantom && Options.CurrentGameMode != CustomGameMode.Standard) return;
+            
+            var sender = CustomRpcSender.Create("RpcResetInvisibility", SendOption.Reliable);
+            sender.StartPackedMessage();
 
             foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner || pc == player || (!phantom && pc.IsModdedClient()) || (phantom && pc.IsImpostor())) continue;
             
-                var sender = CustomRpcSender.Create("RpcResetInvisibility", SendOption.Reliable);
                 sender.StartMessage(pc.OwnerId);
                 sender.RpcExiled(player, autoStartRpc: false, exileForHost: false);
                 RoleTypes role = Utils.GetRoleMap(pc.PlayerId, player.PlayerId).RoleType;
@@ -1625,11 +1634,11 @@ internal static class ExtendedPlayerControl
                     .Write((ushort)(player.NetTransform.lastSequenceId + 16383))
                     .EndRpc();
                 sender.EndMessage();
-                sender.SendMessage();
 
                 NumSnapToCallsThisRound += 4;
             }
 
+            sender.SendMessage();
             Logger.Info($"Reset invisibility for {player.GetNameWithRole()}", "RpcResetInvisibility");
         }
 

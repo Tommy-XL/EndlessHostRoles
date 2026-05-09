@@ -415,6 +415,9 @@ public static class CaptureTheFlag
             yield return WaitFrameIfNecessary();
         }
         
+        var sender = CustomRpcSender.Create("CTF Set Teams");
+        sender.StartPackedMessage();
+        
         foreach (CTFTeamData data in TeamData.Values)
         {
             foreach (byte id1 in data.Players)
@@ -424,7 +427,6 @@ public static class CaptureTheFlag
                     var pc1 = id1.GetPlayer();
                     if (!pc1 || pc1.AmOwner) continue;
 
-                    var sender = CustomRpcSender.Create("CTF Set Teams");
                     sender.StartMessage(pc1.OwnerId);
 
                     foreach (byte id2 in data.Players)
@@ -443,14 +445,16 @@ public static class CaptureTheFlag
                         }
                         catch (Exception e) { Utils.ThrowException(e); }
                     }
-                            
-                    sender.SendMessage();
+
+                    sender.EndMessage();
                 }
                 catch (Exception e) { Utils.ThrowException(e); }
                 
                 yield return WaitFrameIfNecessary();
             }
         }
+        
+        sender.SendMessage(dispose: PlayerControl.AllPlayerControls.Count <= 1);
 
         ValidTag = true;
         GameStartTS = Utils.TimeStamp;
