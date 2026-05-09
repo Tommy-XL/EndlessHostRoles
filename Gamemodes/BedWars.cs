@@ -455,7 +455,7 @@ public static class BedWars
 
         yield return WaitFrameIfNecessary();
 
-        Utils.SetChatVisibleForAll();
+        Main.AllAlivePlayerControls.SetChatVisible(true);
 
         yield return WaitFrameIfNecessary();
 

@@ -244,7 +244,9 @@ internal static class SoloPVP
         LastHurt[pc.PlayerId] = Utils.TimeStamp;
         pc.ReviveFromTemporaryExile();
         RPC.PlaySoundRPC(pc.PlayerId, Sounds.SpawnSound);
-        SpawnMap.GetSpawnMap().RandomTeleport(pc);
+
+        if (Main.LIMap) pc.TPToRandomVent();
+        else SpawnMap.GetSpawnMap().RandomTeleport(pc);
     }
 
     private static IEnumerator OnPlayerDead(PlayerControl target)
@@ -256,7 +258,9 @@ internal static class SoloPVP
             PlayerHP[target.PlayerId] = PlayerHPMax[target.PlayerId];
             LastHurt[target.PlayerId] = Utils.TimeStamp;
             RPC.PlaySoundRPC(target.PlayerId, Sounds.SpawnSound);
-            SpawnMap.GetSpawnMap().RandomTeleport(target);
+
+            if (Main.LIMap) target.TPToRandomVent();
+            else SpawnMap.GetSpawnMap().RandomTeleport(target);
             yield break;
         }
         

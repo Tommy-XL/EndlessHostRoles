@@ -540,7 +540,7 @@ public static class Quiz
 
                 if (Chat)
                 {
-                    Utils.SetChatVisibleForAll();
+                    Main.AllAlivePlayerControls.SetChatVisible(true);
                     yield return new WaitForSecondsRealtime(1f);
                 }
 

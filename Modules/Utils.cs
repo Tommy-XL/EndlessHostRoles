@@ -1841,7 +1841,7 @@ public static class Utils
                 return writer;
             }
 
-            if (sender.AmOwner && sender.Data.IsDead)
+            if (sender.AmOwner && sender.Data.IsDead && (sendTo == byte.MaxValue || !receiver.Data.IsDead))
             {
                 bool delayMessage = false;
                 
@@ -3674,6 +3674,12 @@ public static class Utils
         PlayerGameOptionsSender.SetDirtyToAllV4();
     }
 
+    public static void SyncAllSettings()
+    {
+        PlayerGameOptionsSender.SetDirtyToAll();
+        PlayerGameOptionsSender.SendAllImmediately();
+    }
+
     public static bool RpcChangeSkin(PlayerControl pc, NetworkedPlayerInfo.PlayerOutfit newOutfit, CustomRpcSender writer = null, SendOption sendOption = SendOption.Reliable)
     {
         if (!AmongUsClient.Instance.AmHost) return false;
@@ -4018,7 +4024,7 @@ public static class Utils
         try
         {
             if (Lovers.PrivateChat.GetBool() && Main.LoversPlayers.TrueForAll(x => x.IsAlive()))
-                Main.LoversPlayers.ForEach(x => x.SetChatVisible(true));
+                Main.LoversPlayers.SetChatVisible(true);
         }
         catch (Exception e) { ThrowException(e); }
 
@@ -4809,22 +4815,58 @@ public static class Utils
         return new(r, g, b, color.a);
     }
 
-    public static void SetChatVisibleForAll()
+    public static void SetChatVisible(this IReadOnlyList<PlayerControl> players, bool visible)
     {
-        if (!GameStates.IsInGame) return;
-        
-        var aapc = Main.AllAlivePlayerControlsToList;
-        
-        if (Options.CurrentGameMode is CustomGameMode.Mingle or CustomGameMode.Quiz or CustomGameMode.NaturalDisasters) 
+        switch (players.Count)
         {
-            foreach (var pc in aapc)
-            {
-                var dummyImp = aapc.FirstOrDefault(x => x != pc);
-                if (dummyImp) dummyImp.RpcSetRoleDesync(RoleTypes.Impostor, pc.OwnerId);
-            }
-        }
+            case 0:
+                {
+                    return;
+                }
+            case 1:
+                {
+                    players[0].SetChatVisible(visible);
+                    return;
+                }
+            default:
+                {
+                    if (Options.CurrentGameMode is CustomGameMode.Mingle or CustomGameMode.Quiz or CustomGameMode.NaturalDisasters)
+                    {
+                        foreach (var pc in players)
+                        {
+                            var dummyImp = players.FirstOrDefault(x => x != pc);
+                            if (dummyImp) dummyImp.RpcSetRoleDesync(RoleTypes.Impostor, pc.OwnerId);
+                        }
+                    }
 
-        aapc.Do(x => x.SetChatVisible(true));
+                    DataFlagRateLimiter.Enqueue(() =>
+                    {
+                        MessageWriter packedWriter = MessageWriter.Get(SendOption.Reliable);
+                        packedWriter.StartMessage(26);
+                        packedWriter.WritePacked(AmongUsClient.Instance.GameId);
+
+                        foreach (PlayerControl pc in players)
+                        {
+                            if (packedWriter.Length > 500)
+                            {
+                                packedWriter.EndMessage();
+                                AmongUsClient.Instance.SendOrDisconnect(packedWriter);
+                                packedWriter.Clear(SendOption.Reliable);
+                                packedWriter.StartMessage(26);
+                                packedWriter.WritePacked(AmongUsClient.Instance.GameId);
+                            }
+
+                            pc.SetChatVisible(visible, packedWriter);
+                        }
+
+                        packedWriter.EndMessage();
+                        AmongUsClient.Instance.SendOrDisconnect(packedWriter);
+                        packedWriter.Recycle();
+                    }, calls: 3); // WAITING FOR THE SLOTHS TO VERIFY THIS (3 or 3 * players.Count)
+
+                    return;
+                }
+        }
     }
 
     public static bool TryCast<T>(this Il2CppObjectBase obj, out T casted) where T : Il2CppObjectBase

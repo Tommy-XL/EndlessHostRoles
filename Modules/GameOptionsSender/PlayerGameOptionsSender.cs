@@ -38,7 +38,7 @@ public sealed class PlayerGameOptionsSender(PlayerControl player) : GameOptionsS
         }
     }
 
-    public static void SendImmediately(byte playerId)
+    public static void ForceSendImmediately(byte playerId)
     {
         for (var index = 0; index < AllSenders.Count; index++)
         {
@@ -50,6 +50,22 @@ public sealed class PlayerGameOptionsSender(PlayerControl player) : GameOptionsS
                 sender.SendGameOptions();
                 sender.IsDirty = false;
                 break; // Only one sender can have the same player id
+            }
+        }
+    }
+
+    public static void SendAllImmediately()
+    {
+        ForceWaitFrame = true;
+        
+        for (var index = 0; index < AllSenders.Count; index++)
+        {
+            GameOptionsSender allSender = AllSenders[index];
+
+            if (allSender is PlayerGameOptionsSender { IsDirty: true } sender)
+            {
+                sender.SendGameOptions();
+                sender.IsDirty = false;
             }
         }
     }

@@ -495,79 +495,66 @@ internal class Chemist : RoleBase
 
     public override void OnFixedUpdate(PlayerControl pc)
     {
-        if (!GameStates.IsInTask || !pc.IsAlive()) return;
+        if (!GameStates.IsInTask || !pc.IsAlive() || LastUpdate >= Utils.TimeStamp) return;
 
-        var now = Utils.TimeStamp;
-        if (LastUpdate >= now) return;
+        LastUpdate = Utils.TimeStamp;
 
-        var playerId = pc.PlayerId;
-        var itemCounts = ItemCounts;
-        var airGain = AirGainedPerSecond.GetInt();
-        var waterGain = WaterGainedPerSecond.GetInt();
-
-        int air = itemCounts[Item.Air];
-        if (air < 900)
+        if (ItemCounts[Item.Air] < 900)
         {
-            air += airGain;
-            itemCounts[Item.Air] = air;
-            Utils.SendRPC(CustomRPC.SyncRoleData, playerId, 1, (int)Item.Air, airGain);
+            ItemCounts[Item.Air] += AirGainedPerSecond.GetInt();
+            Utils.SendRPC(CustomRPC.SyncRoleData, pc.PlayerId, 1, (int)Item.Air, AirGainedPerSecond.GetInt());
         }
 
-        int water = itemCounts[Item.Water];
-        if (water < 900)
+        if (ItemCounts[Item.Water] < 900)
         {
-            water += waterGain;
-            itemCounts[Item.Water] = water;
-            Utils.SendRPC(CustomRPC.SyncRoleData, playerId, 1, (int)Item.Water, waterGain);
+            ItemCounts[Item.Water] += WaterGainedPerSecond.GetInt();
+            Utils.SendRPC(CustomRPC.SyncRoleData, pc.PlayerId, 1, (int)Item.Water, WaterGainedPerSecond.GetInt());
         }
 
         Factory beforeFactory = CurrentFactory;
         PlainShipRoom room = pc.GetPlainShipRoom();
-        if (room == null) goto AFTER_ROOM;
-        
-        SystemTypes roomId = room.RoomId;
-        if (itemCounts[Item.ThermalWater] < 50 && roomId == HottestRoom[Main.CurrentMap])
+
+        if (ItemCounts[Item.ThermalWater] < 50 && room && room.RoomId == HottestRoom[Main.CurrentMap])
         {
-            itemCounts[Item.ThermalWater]++;
-            Utils.SendRPC(CustomRPC.SyncRoleData, playerId, 1, (int)Item.ThermalWater, 1);
+            ItemCounts[Item.ThermalWater]++;
+            Utils.SendRPC(CustomRPC.SyncRoleData, pc.PlayerId, 1, (int)Item.ThermalWater, 1);
         }
 
-        if (!FactoryLocations.TryGetValue(roomId, out var newFactory)) newFactory = default;
-
-        CurrentFactory = newFactory;
-        Utils.SendRPC(CustomRPC.SyncRoleData, pc.PlayerId, 3, (int)CurrentFactory);
-
-        if (CurrentFactory != beforeFactory)
+        if (room)
         {
-            var processes = Processes[newFactory];
-            string bestProcess = null;
+            CurrentFactory = FactoryLocations.GetValueOrDefault(room.RoomId);
+            Utils.SendRPC(CustomRPC.SyncRoleData, pc.PlayerId, 3, (int)CurrentFactory);
 
-            foreach (var kv in processes)
+            if (CurrentFactory != beforeFactory)
             {
-                bool canDo = true;
-                var ingredients = kv.Value.Ingredients;
+                var processes = Processes[newFactory];
+                string bestProcess = null;
 
-                for (int i = 0; i < ingredients.Count; i++)
+                foreach (var kv in processes)
                 {
-                    var ing = ingredients[i];
-                    if (itemCounts[ing.Item] < ing.Count)
+                    bool canDo = true;
+                    var ingredients = kv.Value.Ingredients;
+
+                    for (int i = 0; i < ingredients.Count; i++)
                     {
-                        canDo = false;
+                        var ing = ingredients[i];
+                        if (itemCounts[ing.Item] < ing.Count)
+                        {
+                            canDo = false;
+                            break;
+                        }
+                    }
+                    if (canDo)
+                    {
+                        bestProcess = kv.Key;
                         break;
                     }
                 }
-                if (canDo)
-                {
-                    bestProcess = kv.Key;
-                    break;
-                }
+
+                SelectedProcess = bestProcess ?? string.Empty;
+                Utils.SendRPC(CustomRPC.SyncRoleData, pc.PlayerId, 2, SelectedProcess);
             }
-
-            SelectedProcess = bestProcess ?? string.Empty;
-            Utils.SendRPC(CustomRPC.SyncRoleData, pc.PlayerId, 2, SelectedProcess);
         }
-
-    AFTER_ROOM:
 
         if ((AcidPlayersDieOptions)AcidPlayersDie.GetValue() == AcidPlayersDieOptions.AfterTime)
             CheckAndKillAcidPlayers();

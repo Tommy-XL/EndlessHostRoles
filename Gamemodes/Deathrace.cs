@@ -266,7 +266,7 @@ public static class Deathrace
         Utils.NotifyRoles();
         
         Main.AllPlayerSpeed.SetAllValues(Main.RealOptionsData.GetFloat(FloatOptionNames.PlayerSpeedMod));
-        Main.EnumerateAlivePlayerControls().Do(x => x.SyncSettings());
+        Utils.SyncAllSettings();
         
         GameGoing = true;
     }

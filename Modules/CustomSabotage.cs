@@ -139,13 +139,13 @@ public class GrabOxygenMaskSabotage : CustomSabotage
             MapNames.Airship => SystemTypes.Medical,
             MapNames.Fungle => SystemTypes.Kitchen,
             (MapNames)6 => (SystemTypes)SubmergedCompatibility.SubmergedSystemTypes.Filtration,
-            _ => SystemTypes.Outside
+            _ => ShipStatus.Instance.AllRooms.RandomElement().RoomId
         };
 
         TimeLimit = Math.Min(60, GetDefaultSabotageTimeLimit(map));
         AdjustTimeLimitBasedOnPlayerSpeed(ref TimeLimit);
 
-        RoomPosition = RandomSpawn.SpawnMap.GetSpawnMap().Positions.GetValueOrDefault(TargetRoom, TargetRoom.GetRoomClass().transform.position);
+        RoomPosition = Main.LIMap ? TargetRoom.GetRoomClass().transform.position : RandomSpawn.SpawnMap.GetSpawnMap().Positions.GetValueOrDefault(TargetRoom, TargetRoom.GetRoomClass().transform.position);
         Main.EnumerateAlivePlayerControls().Do(x => LocateArrow.Add(x.PlayerId, RoomPosition));
     }
 

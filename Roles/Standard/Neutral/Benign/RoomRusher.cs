@@ -95,7 +95,7 @@ public class RoomRusher : RoleBase
                 MapNames.Airship => SystemTypes.MainHall,
                 MapNames.Fungle => SystemTypes.Dropship,
                 (MapNames)6 => (SystemTypes)SubmergedCompatibility.SubmergedSystemTypes.UpperCentral,
-                _ => throw new ArgumentOutOfRangeException(map.ToString(), "Invalid map")
+                _ => AllRooms.RandomElement()
             };
 
         if (!initial && !dontCount) CompletedNum++;
