@@ -168,7 +168,7 @@ internal static class ControllerManagerUpdatePatch
                 }
 
                 if (KeysDown(SetChatVisibleForAllKey))
-                    Main.AllAlivePlayerControls.SetChatVisible(true);
+                    Main.AllAlivePlayerControlsToList.SetChatVisible(true);
 
                 if (KeysDown(StartAndStopMeetingHudKey))
                 {

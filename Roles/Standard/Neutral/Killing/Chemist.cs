@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using static EHR.Options;
-using static EHR.Roles.Adventurer;
 
 namespace EHR.Roles;
 
@@ -522,7 +521,8 @@ internal class Chemist : RoleBase
 
         if (room)
         {
-            CurrentFactory = FactoryLocations.GetValueOrDefault(room.RoomId);
+            var newFactory = FactoryLocations.GetValueOrDefault(room.RoomId);
+            CurrentFactory = newFactory;
             Utils.SendRPC(CustomRPC.SyncRoleData, pc.PlayerId, 3, (int)CurrentFactory);
 
             if (CurrentFactory != beforeFactory)
@@ -538,7 +538,7 @@ internal class Chemist : RoleBase
                     for (int i = 0; i < ingredients.Count; i++)
                     {
                         var ing = ingredients[i];
-                        if (itemCounts[ing.Item] < ing.Count)
+                        if (ItemCounts[ing.Item] < ing.Count)
                         {
                             canDo = false;
                             break;

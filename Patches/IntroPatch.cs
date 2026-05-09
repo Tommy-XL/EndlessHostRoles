@@ -1179,7 +1179,7 @@ internal static class IntroCutsceneDestroyPatch
                 case CustomGameMode.HideAndSeek when CustomHnS.Chat:
                 case CustomGameMode.NaturalDisasters when NaturalDisasters.Chat:
                 case CustomGameMode.Standard when Options.ChatDuringGame.GetBool():
-                    LateTask.New(() => Main.AllAlivePlayerControls.SetChatVisible(true), 4f);
+                    LateTask.New(() => Main.AllAlivePlayerControlsToList.SetChatVisible(true), 4f);
                     break;
             }
 
