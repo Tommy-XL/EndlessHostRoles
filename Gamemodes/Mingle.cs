@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using AmongUs.GameOptions;
+using EHR.Modules;
 using UnityEngine;
 
 namespace EHR.Gamemodes;
@@ -371,7 +372,8 @@ public static class Mingle
                 if (TimeEndTS == now && PlayerControl.AllPlayerControls.Count < 50)
                 {
                     Main.AllPlayerSpeed.SetAllValues(Main.MinSpeed);
-                    Utils.SyncAllSettings();
+                    Main.EnumerateAlivePlayerControls().Do(x => x.MarkDirtySettings());
+                    PlayerGameOptionsSender.SendAllImmediately();
                 }
                 else if (TimeEndTS < now)
                 {

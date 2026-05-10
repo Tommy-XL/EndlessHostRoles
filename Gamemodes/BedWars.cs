@@ -461,6 +461,9 @@ public static class BedWars
 
         MapNames map = Main.CurrentMap;
         Dictionary<BedWarsTeam, Base> bases = Bases[map];
+        
+        var sender = CustomRpcSender.Create("BedWars OnGameStart (Packed)", SendOption.Reliable);
+        sender.StartPackedMessage();
 
         foreach ((byte id, BedWarsTeam team) in playerTeams)
         {
@@ -473,26 +476,18 @@ public static class BedWars
                 Base = bases[team]
             };
 
-            {
-                var sender = CustomRpcSender.Create($"BedWars OnGameStart ({pc.GetRealName()})", SendOption.Reliable);
-
-                sender.TP(pc, data.Base.SpawnPosition);
-
-                byte colorId = team.GetColorId();
-
-                pc.SetColor(colorId);
-
-                sender.AutoStartRpc(pc.NetId, RpcCalls.SetColor)
-                    .Write(pc.Data.NetId)
-                    .Write(colorId)
-                    .EndRpc();
-
-                sender.SendMessage();
-            }
+            var writer = CustomRpcSender.Create($"BedWars OnGameStart ({pc.GetRealName()})", SendOption.Reliable);
+            writer.TP(pc, data.Base.SpawnPosition);
+            byte colorId = team.GetColorId();
+            pc.SetColor(colorId);
+            writer.AutoStartRpc(pc.NetId, RpcCalls.SetColor)
+                .Write(pc.Data.NetId)
+                .Write(colorId)
+                .EndRpc();
+            writer.SendMessage();
 
             if (!pc.AmOwner)
             {
-                var sender = CustomRpcSender.Create($"BedWars OnGameStart ({pc.GetRealName()}) (2)", SendOption.Reliable);
                 sender.StartMessage(pc.OwnerId);
 
                 sender.StartRpc(pc.NetId, RpcCalls.ProtectPlayer)
@@ -511,7 +506,7 @@ public static class BedWars
                         .EndRpc();
                 }
 
-                sender.SendMessage();
+                sender.EndMessage();
             }
             else
             {
@@ -522,6 +517,8 @@ public static class BedWars
 
             yield return WaitFrameIfNecessary();
         }
+        
+        sender.SendMessage(dispose: PlayerControl.AllPlayerControls.Count <= 1);
 
         yield return WaitFrameIfNecessary();
 

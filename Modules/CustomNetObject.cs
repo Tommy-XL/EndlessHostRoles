@@ -124,27 +124,30 @@ namespace EHR
 
         protected void Hide(IEnumerable<PlayerControl> players)
         {
-            bool hasValue = false;
+            int messages = 0;
+            int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
+            
             MessageWriter packedWriter = MessageWriter.Get(SendOption.Reliable);
             packedWriter.StartMessage(26);
             packedWriter.WritePacked(AmongUsClient.Instance.GameId);
             
             foreach (PlayerControl player in players)
             {
-                if (packedWriter.Length > 500)
+                if (packedWriter.Length > 500 || messages >= packingLimit)
                 {
-                    hasValue = false;
+                    messages = 0;
                     packedWriter.EndMessage();
                     AmongUsClient.Instance.SendOrDisconnect(packedWriter);
                     packedWriter.Clear(SendOption.Reliable);
                     packedWriter.StartMessage(26);
                     packedWriter.WritePacked(AmongUsClient.Instance.GameId);
                 }
-                
-                hasValue |= Hide(player, packedWriter);
+
+                if (Hide(player, packedWriter))
+                    messages++;
             }
 
-            if (hasValue)
+            if (messages > 0)
             {
                 packedWriter.EndMessage();
                 AmongUsClient.Instance.SendOrDisconnect(packedWriter);
@@ -297,44 +300,59 @@ namespace EHR
                 AllObjects.Add(this);
 
                 yield return new WaitForSecondsRealtime(0.1f);
-                    
-                foreach (PlayerControl pc in Main.EnumeratePlayerControls())
+
+                qa = DataFlagRateLimiter.Enqueue(() =>
                 {
-                    if (pc.AmOwner) continue;
+                    int messages = 0;
+                    int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
+                    MessageWriter stream = MessageWriter.Get(SendOption.Reliable);
+                    stream.StartMessage(26);
+                    stream.WritePacked(AmongUsClient.Instance.GameId);
 
-                    qa = DataFlagRateLimiter.Enqueue(() =>
+                    foreach (PlayerControl pc in Main.EnumeratePlayerControls())
                     {
-                        var sender = CustomRpcSender.Create("CustomNetObject.CreateNetObject (2)", SendOption.Reliable, log: false);
-                        MessageWriter writer = sender.stream;
-                        sender.StartMessage(pc.OwnerId);
-                        writer.StartMessage(1);
+                        if (pc.AmOwner) continue;
+
+                        if (stream.Length > 500 || messages + 3 > packingLimit)
                         {
-                            writer.WritePacked(playerControl.NetId);
-                            writer.Write(pc.PlayerId);
+                            stream.EndMessage();
+                            AmongUsClient.Instance.SendOrDisconnect(stream);
+                            stream.Clear(SendOption.Reliable);
+                            stream.StartMessage(26);
+                            stream.WritePacked(AmongUsClient.Instance.GameId);
                         }
-                        writer.EndMessage();
 
-                        sender.StartRpc(playerControl.NetId, (byte)RpcCalls.MurderPlayer)
-                            .WriteNetObject(playerControl)
-                            .Write((int)MurderResultFlags.FailedError)
-                            .EndRpc();
+                        stream.StartMessage(6);
+                        stream.Write(AmongUsClient.Instance.GameId);
+                        stream.WritePacked(pc.OwnerId);
+                        stream.StartMessage(1);
+                        stream.WritePacked(playerControl.NetId);
+                        stream.Write(pc.PlayerId);
+                        stream.EndMessage();
+                        stream.StartMessage(2);
+                        stream.WritePacked(playerControl.NetId);
+                        stream.Write((byte)RpcCalls.MurderPlayer);
+                        stream.WriteNetObject(playerControl);
+                        stream.Write((int)MurderResultFlags.FailedError);
+                        stream.EndMessage();
+                        stream.StartMessage(1);
+                        stream.WritePacked(playerControl.NetId);
+                        stream.Write((byte)254);
+                        stream.EndMessage();
+                        stream.EndMessage();
 
-                        writer.StartMessage(1);
-                        {
-                            writer.WritePacked(playerControl.NetId);
-                            writer.Write((byte)254);
-                        }
-                        writer.EndMessage();
+                        messages += 3;
+                    }
+                    
+                    stream.EndMessage();
+                    AmongUsClient.Instance.SendOrDisconnect(stream);
+                    stream.Recycle();
 
-                        sender.EndMessage();
-                        sender.SendMessage();
-                    }, calls: 2);
+                    playerControl.CachedPlayerData = PlayerControl.LocalPlayer.Data;
+                }, calls: 2); // WAITING FOR THE SLOTHS TO VERIFY THIS
 
-                    yield return qa.Wait();
-                    if (qa.Dropped) yield break;
-                }
-            
-                playerControl.CachedPlayerData = PlayerControl.LocalPlayer.Data;
+                yield return qa.Wait();
+                if (qa.Dropped) yield break;
 
                 yield return new WaitForSecondsRealtime(0.15f);
                 

@@ -4820,52 +4820,56 @@ public static class Utils
         switch (players.Count)
         {
             case 0:
-                {
-                    return;
-                }
+            {
+                return;
+            }
             case 1:
-                {
-                    players[0].SetChatVisible(visible);
-                    return;
-                }
+            {
+                players[0].SetChatVisible(visible);
+                return;
+            }
             default:
+            {
+                if (Options.CurrentGameMode is CustomGameMode.Mingle or CustomGameMode.Quiz or CustomGameMode.NaturalDisasters) 
                 {
-                    if (Options.CurrentGameMode is CustomGameMode.Mingle or CustomGameMode.Quiz or CustomGameMode.NaturalDisasters)
+                    foreach (var pc in players)
                     {
-                        foreach (var pc in players)
+                        var dummyImp = players.FirstOrDefault(x => x != pc);
+                        if (dummyImp) dummyImp.RpcSetRoleDesync(RoleTypes.Impostor, pc.OwnerId);
+                    }
+                }
+
+                DataFlagRateLimiter.Enqueue(() =>
+                {
+                    int messages = 0;
+                    int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
+
+                    MessageWriter packedWriter = MessageWriter.Get(SendOption.Reliable);
+                    packedWriter.StartMessage(26);
+                    packedWriter.WritePacked(AmongUsClient.Instance.GameId);
+
+                    foreach (PlayerControl pc in players)
+                    {
+                        if (packedWriter.Length > 500 || messages >= packingLimit)
                         {
-                            var dummyImp = players.FirstOrDefault(x => x != pc);
-                            if (dummyImp) dummyImp.RpcSetRoleDesync(RoleTypes.Impostor, pc.OwnerId);
+                            packedWriter.EndMessage();
+                            AmongUsClient.Instance.SendOrDisconnect(packedWriter);
+                            packedWriter.Clear(SendOption.Reliable);
+                            packedWriter.StartMessage(26);
+                            packedWriter.WritePacked(AmongUsClient.Instance.GameId);
                         }
+
+                        pc.SetChatVisible(visible, packedWriter);
+                        messages++;
                     }
 
-                    DataFlagRateLimiter.Enqueue(() =>
-                    {
-                        MessageWriter packedWriter = MessageWriter.Get(SendOption.Reliable);
-                        packedWriter.StartMessage(26);
-                        packedWriter.WritePacked(AmongUsClient.Instance.GameId);
-
-                        foreach (PlayerControl pc in players)
-                        {
-                            if (packedWriter.Length > 500)
-                            {
-                                packedWriter.EndMessage();
-                                AmongUsClient.Instance.SendOrDisconnect(packedWriter);
-                                packedWriter.Clear(SendOption.Reliable);
-                                packedWriter.StartMessage(26);
-                                packedWriter.WritePacked(AmongUsClient.Instance.GameId);
-                            }
-
-                            pc.SetChatVisible(visible, packedWriter);
-                        }
-
-                        packedWriter.EndMessage();
-                        AmongUsClient.Instance.SendOrDisconnect(packedWriter);
-                        packedWriter.Recycle();
-                    }, calls: 3); // WAITING FOR THE SLOTHS TO VERIFY THIS (3 or 3 * players.Count)
-
-                    return;
-                }
+                    packedWriter.EndMessage();
+                    AmongUsClient.Instance.SendOrDisconnect(packedWriter);
+                    packedWriter.Recycle();
+                }, calls: 3); // WAITING FOR THE SLOTHS TO VERIFY THIS (3 or 3 * players.Count)
+                
+                return;
+            }
         }
     }
 
