@@ -218,7 +218,7 @@ internal static class ExtendedPlayerControl
                 return false;
             }
 
-            if (packedWriter == null) DataFlagRateLimiter.Enqueue(Action, calls: 3);
+            if (packedWriter == null) DataFlagRateLimiter.Enqueue(Action);
             else Action();
             return true;
 

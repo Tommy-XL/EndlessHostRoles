@@ -546,7 +546,7 @@ internal static class VentilationSystemDeterioratePatch
     {
         try
         {
-            if (!ShipStatus.Instance) return false;
+            if (!ShipStatus.Instance || pc.PlayerId >= 254) return false;
             return !pc.AmOwner && !pc.IsModdedClient() && !pc.Data.IsDead && pc.GetRoleTypes() is RoleTypes.Engineer or RoleTypes.Impostor or RoleTypes.Shapeshifter or RoleTypes.Phantom && ShipStatus.Instance.AllVents.Any(vent => !pc.CanUseVent(vent.Id));
         }
         catch (Exception e)

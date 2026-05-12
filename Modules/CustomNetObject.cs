@@ -89,7 +89,7 @@ namespace EHR
 
                 sender.EndMessage();
                 sender.SendMessage();
-            }, channel, calls: 2);
+            }, channel);
         }
 
         public void TP(Vector2 position)
@@ -324,7 +324,7 @@ namespace EHR
                     msg.EndMessage();
                     AmongUsClient.Instance.SendOrDisconnect(msg);
                     msg.Recycle();
-                }, calls: 3);
+                });
 
                 yield return qa.Wait();
                 if (qa.Dropped) yield break;
@@ -344,61 +344,60 @@ namespace EHR
 
                 yield return new WaitForSecondsRealtime(0.1f);
 
-                qa = DataFlagRateLimiter.Enqueue(() =>
+                if (PlayerControl.AllPlayerControls.Count > 1)
                 {
-                    if (PlayerControl.AllPlayerControls.Count > 1)
+                    int messages = 0;
+                    int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
+                    MessageWriter stream = MessageWriter.Get(SendOption.Reliable);
+                    stream.StartMessage(26);
+                    stream.WritePacked(AmongUsClient.Instance.GameId);
+
+                    foreach (PlayerControl pc in Main.EnumeratePlayerControls())
                     {
-                        int messages = 0;
-                        int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
-                        MessageWriter stream = MessageWriter.Get(SendOption.Reliable);
-                        stream.StartMessage(26);
-                        stream.WritePacked(AmongUsClient.Instance.GameId);
+                        if (pc.AmOwner) continue;
 
-                        foreach (PlayerControl pc in Main.EnumeratePlayerControls())
+                        if (stream.Length > 500 || messages + 3 > packingLimit)
                         {
-                            if (pc.AmOwner) continue;
-
-                            if (stream.Length > 500 || messages + 3 > packingLimit)
-                            {
-                                stream.EndMessage();
-                                AmongUsClient.Instance.SendOrDisconnect(stream);
-                                stream.Clear(SendOption.Reliable);
-                                stream.StartMessage(26);
-                                stream.WritePacked(AmongUsClient.Instance.GameId);
-                            }
-
-                            stream.StartMessage(6);
-                            stream.Write(AmongUsClient.Instance.GameId);
-                            stream.WritePacked(pc.OwnerId);
-                            stream.StartMessage(1);
-                            stream.WritePacked(playerControl.NetId);
-                            stream.Write(pc.PlayerId);
                             stream.EndMessage();
-                            stream.StartMessage(2);
-                            stream.WritePacked(playerControl.NetId);
-                            stream.Write((byte)RpcCalls.MurderPlayer);
-                            stream.WriteNetObject(playerControl);
-                            stream.Write((int)MurderResultFlags.FailedError);
-                            stream.EndMessage();
-                            stream.StartMessage(1);
-                            stream.WritePacked(playerControl.NetId);
-                            stream.Write((byte)254);
-                            stream.EndMessage();
-                            stream.EndMessage();
-
-                            messages += 3;
+                            qa = DataFlagRateLimiter.Enqueue(() => AmongUsClient.Instance.SendOrDisconnect(stream), cleanup: stream.Recycle);
+                            yield return qa.Wait();
+                            if (qa.Dropped) yield break;
+                            messages = 0;
+                            stream.Clear(SendOption.Reliable);
+                            stream.StartMessage(26);
+                            stream.WritePacked(AmongUsClient.Instance.GameId);
                         }
 
+                        stream.StartMessage(6);
+                        stream.Write(AmongUsClient.Instance.GameId);
+                        stream.WritePacked(pc.OwnerId);
+                        stream.StartMessage(1);
+                        stream.WritePacked(playerControl.NetId);
+                        stream.Write(pc.PlayerId);
                         stream.EndMessage();
-                        AmongUsClient.Instance.SendOrDisconnect(stream);
-                        stream.Recycle();
+                        stream.StartMessage(2);
+                        stream.WritePacked(playerControl.NetId);
+                        stream.Write((byte)RpcCalls.MurderPlayer);
+                        stream.WriteNetObject(playerControl);
+                        stream.Write((int)MurderResultFlags.FailedError);
+                        stream.EndMessage();
+                        stream.StartMessage(1);
+                        stream.WritePacked(playerControl.NetId);
+                        stream.Write((byte)254);
+                        stream.EndMessage();
+                        stream.EndMessage();
+
+                        messages += 3;
                     }
 
-                    playerControl.CachedPlayerData = PlayerControl.LocalPlayer.Data;
-                }, calls: 2); // WAITING FOR THE SLOTHS TO VERIFY THIS
+                    stream.EndMessage();
+                    qa = DataFlagRateLimiter.Enqueue(() => AmongUsClient.Instance.SendOrDisconnect(stream));
+                    yield return qa.Wait();
+                    stream.Recycle();
+                    if (qa.Dropped) yield break;
+                }
 
-                yield return qa.Wait();
-                if (qa.Dropped) yield break;
+                playerControl.CachedPlayerData = PlayerControl.LocalPlayer.Data;
 
                 yield return new WaitForSecondsRealtime(0.15f);
                 
@@ -459,7 +458,7 @@ namespace EHR
 
                         sender.EndMessage();
                         sender.SendMessage();
-                    }, calls: 2).Wait();
+                    }).Wait();
                 }
             }
         }
@@ -959,21 +958,11 @@ namespace EHR
 }
 
 // This method sometimes throws an exception, preventing further code from running
-// Fixed by wrapping each line in try-catch
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RawSetName))]
 static class RawSetNameErrorFixPatch
 {
-    public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] string name)
+    public static Exception Finalizer()
     {
-        try { __instance.gameObject.name = name; }
-        catch { }
-        
-        try { __instance.cosmetics.SetName(name); }
-        catch { }
-        
-        try { __instance.cosmetics.SetNameMask(true); }
-        catch { }
-        
-        return false;
+        return null;
     }
 }
