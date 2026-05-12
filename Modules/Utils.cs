@@ -3512,7 +3512,6 @@ public static class Utils
     public static void SendGameDataTo(int targetClientId)
     {
         int messages = 0;
-        int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
 
         MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
         writer.StartMessage(6);
@@ -3521,7 +3520,7 @@ public static class Utils
 
         foreach (NetworkedPlayerInfo playerinfo in GameData.Instance.AllPlayers)
         {
-            if (writer.Length > 500 || messages >= packingLimit)
+            if (writer.Length > 500 || messages >= AmongUsClient.Instance.GetMaxMessagePackingLimit())
             {
                 writer.EndMessage();
 
@@ -4525,7 +4524,6 @@ public static class Utils
                 }
 
                 int messages = 0;
-                int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
 
                 MessageWriter packedWriter = MessageWriter.Get(SendOption.Reliable);
                 packedWriter.StartMessage(26);
@@ -4533,7 +4531,7 @@ public static class Utils
 
                 foreach (PlayerControl pc in players)
                 {
-                    if (packedWriter.Length > 500 || messages >= packingLimit)
+                    if (packedWriter.Length > 500 || messages >= AmongUsClient.Instance.GetMaxMessagePackingLimit())
                     {
                         packedWriter.EndMessage();
                         

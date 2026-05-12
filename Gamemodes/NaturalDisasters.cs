@@ -241,7 +241,7 @@ public static class NaturalDisasters
             "Tornado" => "<size=170%><font=\"VCR SDF\"><line-height=67%><alpha=#00>\u2588<alpha=#00>\u2588<#dbdbdb>\u2588<#dbdbdb>\u2588<#dbdbdb>\u2588<#dbdbdb>\u2588<alpha=#00>\u2588<alpha=#00>\u2588<br><alpha=#00>\u2588<#dbdbdb>\u2588<#b0b0b0>\u2588<#b0b0b0>\u2588<#b0b0b0>\u2588<#b0b0b0>\u2588<#dbdbdb>\u2588<alpha=#00>\u2588<br><#dbdbdb>\u2588<#b0b0b0>\u2588<#b0b0b0>\u2588<#828282>\u2588<#828282>\u2588<#b0b0b0>\u2588<#b0b0b0>\u2588<#dbdbdb>\u2588<br><#dbdbdb>\u2588<#b0b0b0>\u2588<#828282>\u2588<#474747>\u2588<#474747>\u2588<#828282>\u2588<#b0b0b0>\u2588<#dbdbdb>\u2588<br><#dbdbdb>\u2588<#b0b0b0>\u2588<#828282>\u2588<#474747>\u2588<#474747>\u2588<#828282>\u2588<#b0b0b0>\u2588<#dbdbdb>\u2588<br><#dbdbdb>\u2588<#b0b0b0>\u2588<#b0b0b0>\u2588<#828282>\u2588<#828282>\u2588<#b0b0b0>\u2588<#b0b0b0>\u2588<#dbdbdb>\u2588<br><alpha=#00>\u2588<#dbdbdb>\u2588<#b0b0b0>\u2588<#b0b0b0>\u2588<#b0b0b0>\u2588<#b0b0b0>\u2588<#dbdbdb>\u2588<alpha=#00>\u2588<br><alpha=#00>\u2588<alpha=#00>\u2588<#dbdbdb>\u2588<#dbdbdb>\u2588<#dbdbdb>\u2588<#dbdbdb>\u2588<alpha=#00>\u2588<alpha=#00>\u2588<br></line-height></size>",
             "SandStorm" => "<size=170%><font=\"VCR SDF\"><line-height=67%><#ffdc7a>█<#dbcfba>█<#f5c387>█<#ffe8d6>█<#ffc18f>█<#ffe8d6>█<#ffe8d6>█<#ffdc7a>█<br><#dbcfba>█<#f5c6a2>█<#ffc18f>█<#ffe8d6>█<#e6a875>█<#ffe8d6>█<#f5c6a2>█<#ffe8d6>█<br><#e6a875>█<#ffe8d6>█<#f5c6a2>█<#ffe8d6>█<#ffe8d6>█<#ffdc7a>█<#ffe8d6>█<#f5c387>█<br><#ffe8d6>█<#ffdc7a>█<#dbcfba>█<#ffc18f>█<#ffe8d6>█<#ffe8d6>█<#f5c6a2>█<#ffc18f>█<br><#f5c6a2>█<#ffe8d6>█<#f5c6a2>█<#ffe8d6>█<#f5c6a2>█<#e6a875>█<#dbcfba>█<#ffe8d6>█<br><#ffc18f>█<#ffe8d6>█<#ffc18f>█<#ffe8d6>█<#ffe8d6>█<#ffdc7a>█<#ffe8d6>█<#e6a875>█<br><#ffe8d6>█<#f5c6a2>█<#ffe8d6>█<#f5c6a2>█<#ffe8d6>█<#ffe8d6>█<#f5c6a2>█<#ffe8d6>█<br><#ffdc7a>█<#ffe8d6>█<#e6a875>█<#ffe8d6>█<#ffc18f>█<#ffe8d6>█<#ffe8d6>█<#ffdc7a>█<br></line-height></size>",
             "Sinkhole" => "<size=170%><font=\"VCR SDF\"><line-height=67%><#7d7d7d>\u2588<#7d7d7d>\u2588<#545454>\u2588<#7d7d7d>\u2588<#7d7d7d>\u2588<#7d7d7d>\u2588<#7d7d7d>\u2588<#545454>\u2588<br><#545454>\u2588<#424242>\u2588<#424242>\u2588<#424242>\u2588<#424242>\u2588<#424242>\u2588<#424242>\u2588<#7d7d7d>\u2588<br><#7d7d7d>\u2588<#424242>\u2588<#000000>\u2588<#000000>\u2588<#000000>\u2588<#000000>\u2588<#424242>\u2588<#7d7d7d>\u2588<br><#545454>\u2588<#424242>\u2588<#000000>\u2588<#000000>\u2588<#000000>\u2588<#000000>\u2588<#424242>\u2588<#7d7d7d>\u2588<br><#7d7d7d>\u2588<#424242>\u2588<#000000>\u2588<#000000>\u2588<#000000>\u2588<#000000>\u2588<#424242>\u2588<#545454>\u2588<br><#545454>\u2588<#424242>\u2588<#000000>\u2588<#000000>\u2588<#000000>\u2588<#000000>\u2588<#424242>\u2588<#7d7d7d>\u2588<br><#7d7d7d>\u2588<#424242>\u2588<#424242>\u2588<#424242>\u2588<#424242>\u2588<#424242>\u2588<#424242>\u2588<#7d7d7d>\u2588<br><#545454>\u2588<#545454>\u2588<#7d7d7d>\u2588<#7d7d7d>\u2588<#545454>\u2588<#7d7d7d>\u2588<#7d7d7d>\u2588<#545454>\u2588<br></line-height></size>",
-            _ => Utils.EmptyMessage
+            _ => string.Empty
         };
     }
 
@@ -320,8 +320,8 @@ public static class NaturalDisasters
 
             float frequency = DisasterFrequency.GetFloat();
             
-            if (frequency < 2f && GameStates.CurrentServerType is GameStates.ServerType.Local or GameStates.ServerType.Vanilla)
-                frequency = 2f; // Due to rate limits on InnerSloth's servers
+            if (frequency < 0.5f && GameStates.CurrentServerType is GameStates.ServerType.Local or GameStates.ServerType.Vanilla)
+                frequency = 0.5f; // Due to rate limits on InnerSloth's servers
 
             if (LastDisasterTimer.Elapsed.TotalSeconds >= frequency)
             {

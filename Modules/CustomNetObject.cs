@@ -168,15 +168,14 @@ namespace EHR
         protected void Hide(IEnumerable<PlayerControl> players)
         {
             int messages = 0;
-            int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
-            
+
             MessageWriter packedWriter = MessageWriter.Get(SendOption.Reliable);
             packedWriter.StartMessage(26);
             packedWriter.WritePacked(AmongUsClient.Instance.GameId);
             
             foreach (PlayerControl player in players)
             {
-                if (packedWriter.Length > 500 || messages >= packingLimit)
+                if (packedWriter.Length > 500 || messages >= AmongUsClient.Instance.GetMaxMessagePackingLimit())
                 {
                     messages = 0;
                     packedWriter.EndMessage();
@@ -347,7 +346,6 @@ namespace EHR
                 if (PlayerControl.AllPlayerControls.Count > 1)
                 {
                     int messages = 0;
-                    int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
                     MessageWriter stream = MessageWriter.Get(SendOption.Reliable);
                     stream.StartMessage(26);
                     stream.WritePacked(AmongUsClient.Instance.GameId);
@@ -356,7 +354,7 @@ namespace EHR
                     {
                         if (pc.AmOwner) continue;
 
-                        if (stream.Length > 500 || messages + 3 > packingLimit)
+                        if (stream.Length > 500 || messages + 3 > AmongUsClient.Instance.GetMaxMessagePackingLimit())
                         {
                             stream.EndMessage();
                             qa = DataFlagRateLimiter.Enqueue(() => AmongUsClient.Instance.SendOrDisconnect(stream), cleanup: stream.Recycle);
@@ -695,7 +693,7 @@ namespace EHR
             if (newTime >= TotalWarningTime)
             {
                 SpawnTimer.Stop();
-                if (!Room.HasValue) RpcChangeSprite(DisasterSprite);
+                if (!Room.HasValue && !string.IsNullOrEmpty(DisasterSprite)) RpcChangeSprite(DisasterSprite);
             }
             else
             {
@@ -960,6 +958,15 @@ namespace EHR
 // This method sometimes throws an exception, preventing further code from running
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RawSetName))]
 static class RawSetNameErrorFixPatch
+{
+    public static Exception Finalizer()
+    {
+        return null;
+    }
+}
+
+[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.SetName))]
+static class SetNameErrorFixPatch
 {
     public static Exception Finalizer()
     {

@@ -1423,8 +1423,6 @@ public static class GuessManager
                 int textIndex = 0;
 
                 int messages = 0;
-                int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
-                
                 var skipped = false;
                 PlayerControl guesser = guesserId.GetPlayer();
                 MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
@@ -1453,7 +1451,7 @@ public static class GuessManager
                     if (textIndex % 3 == 0) sb.AppendLine();
                     else sb.Append(' ');
 
-                    if (writer.Length > 500 || messages >= packingLimit)
+                    if (writer.Length > 500 || messages >= AmongUsClient.Instance.GetMaxMessagePackingLimit())
                     {
                         messages = 0;
                         writer.EndMessage();
