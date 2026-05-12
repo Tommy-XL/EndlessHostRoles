@@ -69,7 +69,7 @@ public static class NaturalDisasters
         Color color = Utils.GetRoleColor(CustomRoles.NDPlayer);
         const CustomGameMode gameMode = CustomGameMode.NaturalDisasters;
 
-        DisasterFrequency = new FloatOptionItem(id++, "ND_DisasterFrequency", new(0f, 20f, 0.1f), 2f, TabGroup.GameSettings)
+        DisasterFrequency = new FloatOptionItem(id++, "ND_DisasterFrequency", new(0f, 20f, 0.1f), 1f, TabGroup.GameSettings)
             .SetHeader(true)
             .SetGameMode(gameMode)
             .SetColor(color)
@@ -103,7 +103,7 @@ public static class NaturalDisasters
             .SetGameMode(gameMode)
             .SetColor(color);
 
-        DisasterSpawnMode = new StringOptionItem(id++, "ND_DisasterSpawnMode", DisasterSpawnModes, 2, TabGroup.GameSettings)
+        DisasterSpawnMode = new StringOptionItem(id++, "ND_DisasterSpawnMode", DisasterSpawnModes, 0, TabGroup.GameSettings)
             .SetGameMode(gameMode)
             .SetColor(color);
 
