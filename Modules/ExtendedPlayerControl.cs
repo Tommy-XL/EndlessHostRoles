@@ -170,7 +170,8 @@ internal static class ExtendedPlayerControl
         public void FreezeForOthers()
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            
+
+            bool hasValue = false;
             CustomRpcSender sender = CustomRpcSender.Create($"SnapTo Freeze ({player.GetNameWithRole()})", SendOption.Reliable);
             sender.StartPackedMessage();
         
@@ -188,16 +189,17 @@ internal static class ExtendedPlayerControl
                     .EndRpc();
                 sender.EndMessage();
                 NumSnapToCallsThisRound += 2;
+                hasValue = true;
             }
             
-            sender.SendMessage();
+            sender.SendMessage(dispose: !hasValue);
             
             player.Visible = false;
         }
 
-        public void SetChatVisible(bool visible, MessageWriter packedWriter = null)
+        public bool SetChatVisible(bool visible, MessageWriter packedWriter = null)
         {
-            if (!AmongUsClient.Instance.AmHost) return;
+            if (!AmongUsClient.Instance.AmHost) return false;
         
             Logger.Info($"Setting the chat {(visible ? "visible" : "hidden")} for {player.GetNameWithRole()}", "SetChatVisible");
 
@@ -205,7 +207,7 @@ internal static class ExtendedPlayerControl
             {
                 HudManager.Instance.Chat.SetVisible(visible);
                 HudManager.Instance.Chat.HideBanButton();
-                return;
+                return false;
             }
 
             if (player.IsModdedClient())
@@ -213,12 +215,12 @@ internal static class ExtendedPlayerControl
                 var msg = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SetChatVisible, SendOption.Reliable, player.OwnerId);
                 msg.Write(visible);
                 AmongUsClient.Instance.FinishRpcImmediately(msg);
-                return;
+                return false;
             }
 
             if (packedWriter == null) DataFlagRateLimiter.Enqueue(Action, calls: 3);
             else Action();
-            return;
+            return true;
 
             void Action()
             {
@@ -409,14 +411,11 @@ internal static class ExtendedPlayerControl
 
                 if (setRoleMap)
                 {
-                    foreach ((byte seerID, byte targetID) in StartGameHostPatch.RpcSetRoleReplacer.RoleMap.Keys.ToArray())
+                    foreach ((byte seerID, byte targetID) in StartGameHostPatch.RpcSetRoleReplacer.RoleMap.Keys.Where(x => x.TargetID == player.PlayerId).ToArray())
                     {
-                        if (targetID == player.PlayerId)
-                        {
-                            var value = StartGameHostPatch.RpcSetRoleReplacer.RoleMap[(seerID, targetID)];
-                            value.RoleType = roleTypes;
-                            StartGameHostPatch.RpcSetRoleReplacer.RoleMap[(seerID, targetID)] = value;
-                        }
+                        var value = StartGameHostPatch.RpcSetRoleReplacer.RoleMap[(seerID, targetID)];
+                        value.RoleType = roleTypes;
+                        StartGameHostPatch.RpcSetRoleReplacer.RoleMap[(seerID, targetID)] = value;
                     }
                 }
             }
@@ -1514,7 +1513,8 @@ internal static class ExtendedPlayerControl
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
                 NotifyRoles(SpecifyTarget: player);
             }
-            
+
+            bool hasValue = false;
             var sender = CustomRpcSender.Create("RpcMakeInvisible", SendOption.Reliable);
             sender.StartPackedMessage();
 
@@ -1534,9 +1534,10 @@ internal static class ExtendedPlayerControl
                 sender.EndMessage();
 
                 NumSnapToCallsThisRound += 2;
+                hasValue = true;
             }
             
-            sender.SendMessage();
+            sender.SendMessage(dispose: !hasValue);
             Logger.Info($"Made {player.GetNameWithRole()} invisible", "RpcMakeInvisible");
         }
 
@@ -1565,7 +1566,8 @@ internal static class ExtendedPlayerControl
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
                 NotifyRoles(SpecifyTarget: player);
             }
-            
+
+            bool hasValue = false;
             var sender = CustomRpcSender.Create("RpcMakeVisible", SendOption.Reliable);
             sender.StartPackedMessage();
 
@@ -1589,9 +1591,10 @@ internal static class ExtendedPlayerControl
                 sender.EndMessage();
 
                 NumSnapToCallsThisRound += 3;
+                hasValue = true;
             }
 
-            sender.SendMessage();
+            sender.SendMessage(dispose: !hasValue);
             Logger.Info($"Made {player.GetNameWithRole()} visible", "RpcMakeVisible");
         }
 
@@ -1600,7 +1603,8 @@ internal static class ExtendedPlayerControl
             if (!AmongUsClient.Instance.AmHost) return;
             if (!Main.Invisible.Contains(player.PlayerId)) return;
             if (phantom && Options.CurrentGameMode != CustomGameMode.Standard) return;
-            
+
+            bool hasValue = false;
             var sender = CustomRpcSender.Create("RpcResetInvisibility", SendOption.Reliable);
             sender.StartPackedMessage();
 
@@ -1636,9 +1640,10 @@ internal static class ExtendedPlayerControl
                 sender.EndMessage();
 
                 NumSnapToCallsThisRound += 4;
+                hasValue = true;
             }
 
-            sender.SendMessage();
+            sender.SendMessage(dispose: !hasValue);
             Logger.Info($"Reset invisibility for {player.GetNameWithRole()}", "RpcResetInvisibility");
         }
 

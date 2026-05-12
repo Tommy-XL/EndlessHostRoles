@@ -749,16 +749,11 @@ internal class Randomizer : RoleBase
             {
                 long now = Utils.TimeStamp;
 
-                foreach (KeyValuePair<Effect, (long StartTimeStamp, int Duration)> item in effects.ToArray())
+                foreach (KeyValuePair<Effect, (long StartTimeStamp, int Duration)> item in effects.Where(item => item.Value.StartTimeStamp + item.Value.Duration < now).ToArray())
                 {
-                    if (item.Value.StartTimeStamp + item.Value.Duration < now)
-                    {
-                        if (item.Key.IsVisionChangingEffect()) RevertVisionChangesForPlayer(pc, true);
-
-                        if (item.Key.IsSpeedChangingEffect()) RevertSpeedChangesForPlayer(pc, true);
-
-                        effects.Remove(item.Key);
-                    }
+                    if (item.Key.IsVisionChangingEffect()) RevertVisionChangesForPlayer(pc, true);
+                    if (item.Key.IsSpeedChangingEffect()) RevertSpeedChangesForPlayer(pc, true);
+                    effects.Remove(item.Key);
                 }
             }
         }

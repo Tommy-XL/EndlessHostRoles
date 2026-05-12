@@ -747,51 +747,81 @@ public static class KingOfTheZones
                         }
                         else
                         {
-                            List<SystemTypes> added = [];
-                            List<SystemTypes> removed = [];
-
-                            foreach ((SystemTypes zone, long moveTS) in ZoneMoveSchedules)
+                            if (atOnce)
                             {
-                                if (moveTS > now) continue;
-
-                                try
+                                if (Zones.Count > 0 && ZoneMoveSchedules.TryGetValue(Zones[0], out long moveTS) && moveTS <= now)
                                 {
-                                    SystemTypes newZone = AllRooms.Except(Zones).RandomElement();
+                                    IEnumerable<SystemTypes> newZones = AllRooms.Except(Zones).TakeRandom(Zones.Count);
 
-                                    int index = Zones.IndexOf(zone);
-                                    Zones.RemoveAt(index);
-                                    Zones.Insert(index, newZone);
+                                    Zones.Clear();
+                                    ZoneDomination.Clear();
 
-                                    added.Add(newZone);
-
-                                    removed.Add(zone);
-                                    ZoneDomination.Remove(zone);
-
-                                    Logger.Info($"Zone moved: {zone} => {newZone}", "KOTZ");
+                                    foreach (SystemTypes newZone in newZones)
+                                    {
+                                        Zones.Add(newZone);
+                                        ZoneDomination[newZone] = KOTZTeam.None;
+                                        ZoneMoveSchedules[newZone] = now + moveTime + downtime;
+                                        if (downtime > 0) ZoneDowntimeExpire[newZone] = now + downtime;
+                                    }
                                 }
-                                catch (Exception e) { Utils.ThrowException(e); }
                             }
-
-                            removed.ForEach(x => ZoneMoveSchedules.Remove(x));
-
-                            added.ForEach(x =>
+                            else
                             {
-                                ZoneMoveSchedules[x] = now + moveTime + downtime;
-                                if (downtime > 0) ZoneDowntimeExpire[x] = now + downtime;
-                            });
+                                SystemTypes? added = null;
+                                SystemTypes? removed = null;
+
+                                foreach ((SystemTypes zone, long moveTS) in ZoneMoveSchedules)
+                                {
+                                    if (moveTS > now) continue;
+
+                                    try
+                                    {
+                                        SystemTypes newZone = AllRooms.Except(Zones).RandomElement();
+
+                                        int index = Zones.IndexOf(zone);
+                                        Zones.RemoveAt(index);
+                                        Zones.Insert(index, newZone);
+
+                                        added = newZone;
+                                        removed = zone;
+                                        ZoneDomination.Remove(zone);
+
+                                        Logger.Info($"Zone moved: {zone} => {newZone}", "KOTZ");
+                                        break;
+                                    }
+                                    catch (Exception e) { Utils.ThrowException(e); }
+                                }
+
+                                if (removed.HasValue) ZoneMoveSchedules.Remove(removed.Value);
+
+                                if (added.HasValue)
+                                {
+                                    ZoneDomination[added.Value] = KOTZTeam.None;
+                                    ZoneMoveSchedules[added.Value] = now + moveTime + downtime;
+                                    if (downtime > 0) ZoneDowntimeExpire[added.Value] = now + downtime;
+                                }
+                            }
                         }
 
                         if (downtime > 0 && ZoneDowntimeExpire.Count > 0)
                         {
-                            List<SystemTypes> toRemove = [];
-
-                            foreach ((SystemTypes zone, long downtimeExpire) in ZoneDowntimeExpire)
+                            if (atOnce)
                             {
-                                if (downtimeExpire > now) continue;
-                                toRemove.Add(zone);
+                                if (Zones.Count > 0 && ZoneDowntimeExpire.TryGetValue(Zones[0], out long expireTS) && expireTS <= now)
+                                    ZoneDowntimeExpire.Clear();
                             }
+                            else
+                            {
+                                SystemTypes? toRemove = null;
 
-                            toRemove.ForEach(x => ZoneDowntimeExpire.Remove(x));
+                                foreach ((SystemTypes zone, long downtimeExpire) in ZoneDowntimeExpire)
+                                {
+                                    if (downtimeExpire > now) continue;
+                                    toRemove = zone;
+                                }
+
+                                if (toRemove.HasValue) ZoneDowntimeExpire.Remove(toRemove.Value);
+                            }
                         }
                     }
                 }
@@ -803,15 +833,16 @@ public static class KingOfTheZones
                 {
                     if (SpawnProtectionTimes.Count > 0)
                     {
-                        List<byte> toRemove = [];
+                        List<byte> toRemove = null;
 
                         foreach ((byte id, long protectionTS) in SpawnProtectionTimes)
                         {
                             if (protectionTS > now) continue;
+                            toRemove ??= [];
                             toRemove.Add(id);
                         }
 
-                        toRemove.ForEach(x => SpawnProtectionTimes.Remove(x));
+                        toRemove?.ForEach(x => SpawnProtectionTimes.Remove(x));
                     }
                 }
                 catch (Exception e) { Utils.ThrowException(e); }
@@ -822,7 +853,7 @@ public static class KingOfTheZones
                 {
                     if (RespawnTimes.Count > 0)
                     {
-                        List<byte> toRemove = [];
+                        List<byte> toRemove = null;
 
                         foreach ((byte id, long respawnTS) in RespawnTimes)
                         {
@@ -846,12 +877,13 @@ public static class KingOfTheZones
                             }
                             catch (Exception e) { Utils.ThrowException(e); }
 
+                            toRemove ??= [];
                             toRemove.Add(id);
 
                             Logger.Info($"{Main.AllPlayerNames[id]} respawned", "KOTZ");
                         }
 
-                        toRemove.ForEach(x => RespawnTimes.Remove(x));
+                        toRemove?.ForEach(x => RespawnTimes.Remove(x));
                     }
                 }
                 catch (Exception e) { Utils.ThrowException(e); }

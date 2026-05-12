@@ -502,7 +502,7 @@ public static class Quiz
                 var spectators = aapc.ExceptBy(dyingPlayers, x => x.PlayerId).ToArray();
                 spectators.Do(x => x.ExileTemporarily());
                 yield return new WaitForSecondsRealtime(0.2f);
-                var stillLiving = dyingPlayers.ToValidPlayers().FindAll(x => x.IsAlive());
+                var stillLiving = dyingPlayers.ToValidPlayers().Where(x => x.IsAlive()).ToList();
                 stillLiving.ForEach(x => x.RpcChangeRoleBasis(CustomRoles.SerialKiller));
                 Utils.SendRPC(CustomRPC.QuizSync, AllowKills);
 

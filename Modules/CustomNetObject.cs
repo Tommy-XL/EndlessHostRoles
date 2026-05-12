@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using AmongUs.InnerNet.GameDataMessages;
 using EHR.Gamemodes;
@@ -28,13 +29,15 @@ namespace EHR
         private string Sprite;
 
         private int SnapToSendFrameCount;
+        
+        private bool IsPooled;
 
         public void RpcChangeSprite(string sprite)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (this is not NaturalDisaster nd || nd.SpawnTimer <= 0f) Logger.Info($" Change Custom Net Object {GetType().Name} (ID {Id}) sprite", "CNO.RpcChangeSprite");
+            if (this is not NaturalDisaster nd || !nd.SpawnTimer.IsRunning) Logger.Info($" Change Custom Net Object {GetType().Name} (ID {Id}) sprite", "CNO.RpcChangeSprite");
 
-            bool notImportant = this is BedWarsItemGenerator || (this is NaturalDisaster { SpawnTimer: > 1f } && Options.CurrentGameMode != CustomGameMode.NaturalDisasters && GameStates.CurrentServerType == GameStates.ServerType.Vanilla);
+            bool notImportant = this is BedWarsItemGenerator || (this is NaturalDisaster n && n.SpawnTimer.Elapsed.TotalSeconds < n.TotalWarningTime - 1 && Options.CurrentGameMode != CustomGameMode.NaturalDisasters && GameStates.CurrentServerType == GameStates.ServerType.Vanilla);
             SendOption channel = notImportant ? SendOption.None : SendOption.Reliable;
             
             DataFlagRateLimiter.Enqueue(() =>
@@ -92,15 +95,55 @@ namespace EHR
         public void TP(Vector2 position)
         {
             Position = position;
+            SnapToSendFrameCount = 30;
+        }
+        
+        private bool TryReusePooledObject(string sprite, Vector2 position)
+        {
+            try
+            {
+                if (this is not NaturalDisaster) return false;
+
+                CustomNetObject pooled = AllObjects.Find(x => x.IsPooled && x.playerControl);
+                if (pooled == null) return false;
+
+                Logger.Info($" Reusing pooled Custom Net Object NaturalDisaster (ID {pooled.Id})", "CNO.CreateNetObject");
+
+                playerControl = pooled.playerControl;
+                Id = pooled.Id;
+                IsPooled = false;
+
+                AllObjects.Remove(pooled);
+                AllObjects.Add(this);
+
+                TP(position);
+                RpcChangeSprite(sprite);
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Utils.ThrowException(e);
+                return false;
+            }
         }
 
-        public void Despawn()
+        public void Despawn(bool canPool = true)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            Logger.Info($" Despawn Custom Net Object {GetType().Name} (ID {Id})", "CNO.Despawn");
 
             try
             {
+                if (canPool && this is NaturalDisaster && playerControl)
+                {
+                    Logger.Info($" Pooled Custom Net Object {GetType().Name} (ID {Id})", "CNO.Despawn");
+                    IsPooled = true;
+                    TP(new Vector2(50f, 50f));
+                    return;
+                }
+                
+                Logger.Info($" Despawn Custom Net Object {GetType().Name} (ID {Id})", "CNO.Despawn");
+
                 if (playerControl)
                 {
                     MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
@@ -168,7 +211,7 @@ namespace EHR
                 return false;
             }
 
-            if (this is not ShapeshiftMenuElement)
+            if (this is not ShapeshiftMenuElement && player.IsNonHostModdedClient())
             {
                 LateTask.New(() =>
                 {
@@ -220,7 +263,7 @@ namespace EHR
 
         protected void CreateNetObject(string sprite, Vector2 position)
         {
-            if (GameStates.IsEnded || !AmongUsClient.Instance.AmHost) return;
+            if (GameStates.IsEnded || !AmongUsClient.Instance.AmHost || TryReusePooledObject(sprite, position)) return;
             
             Logger.Info($" Create Custom Net Object {GetType().Name} (ID {MaxId + 1}) at {position} - Time since game start: {Utils.TimeStamp - IntroCutsceneDestroyPatch.IntroDestroyTS}s", "CNO.CreateNetObject");
             Main.Instance.StartCoroutine(CoRoutine());
@@ -303,50 +346,53 @@ namespace EHR
 
                 qa = DataFlagRateLimiter.Enqueue(() =>
                 {
-                    int messages = 0;
-                    int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
-                    MessageWriter stream = MessageWriter.Get(SendOption.Reliable);
-                    stream.StartMessage(26);
-                    stream.WritePacked(AmongUsClient.Instance.GameId);
-
-                    foreach (PlayerControl pc in Main.EnumeratePlayerControls())
+                    if (PlayerControl.AllPlayerControls.Count > 1)
                     {
-                        if (pc.AmOwner) continue;
+                        int messages = 0;
+                        int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
+                        MessageWriter stream = MessageWriter.Get(SendOption.Reliable);
+                        stream.StartMessage(26);
+                        stream.WritePacked(AmongUsClient.Instance.GameId);
 
-                        if (stream.Length > 500 || messages + 3 > packingLimit)
+                        foreach (PlayerControl pc in Main.EnumeratePlayerControls())
                         {
+                            if (pc.AmOwner) continue;
+
+                            if (stream.Length > 500 || messages + 3 > packingLimit)
+                            {
+                                stream.EndMessage();
+                                AmongUsClient.Instance.SendOrDisconnect(stream);
+                                stream.Clear(SendOption.Reliable);
+                                stream.StartMessage(26);
+                                stream.WritePacked(AmongUsClient.Instance.GameId);
+                            }
+
+                            stream.StartMessage(6);
+                            stream.Write(AmongUsClient.Instance.GameId);
+                            stream.WritePacked(pc.OwnerId);
+                            stream.StartMessage(1);
+                            stream.WritePacked(playerControl.NetId);
+                            stream.Write(pc.PlayerId);
                             stream.EndMessage();
-                            AmongUsClient.Instance.SendOrDisconnect(stream);
-                            stream.Clear(SendOption.Reliable);
-                            stream.StartMessage(26);
-                            stream.WritePacked(AmongUsClient.Instance.GameId);
+                            stream.StartMessage(2);
+                            stream.WritePacked(playerControl.NetId);
+                            stream.Write((byte)RpcCalls.MurderPlayer);
+                            stream.WriteNetObject(playerControl);
+                            stream.Write((int)MurderResultFlags.FailedError);
+                            stream.EndMessage();
+                            stream.StartMessage(1);
+                            stream.WritePacked(playerControl.NetId);
+                            stream.Write((byte)254);
+                            stream.EndMessage();
+                            stream.EndMessage();
+
+                            messages += 3;
                         }
 
-                        stream.StartMessage(6);
-                        stream.Write(AmongUsClient.Instance.GameId);
-                        stream.WritePacked(pc.OwnerId);
-                        stream.StartMessage(1);
-                        stream.WritePacked(playerControl.NetId);
-                        stream.Write(pc.PlayerId);
                         stream.EndMessage();
-                        stream.StartMessage(2);
-                        stream.WritePacked(playerControl.NetId);
-                        stream.Write((byte)RpcCalls.MurderPlayer);
-                        stream.WriteNetObject(playerControl);
-                        stream.Write((int)MurderResultFlags.FailedError);
-                        stream.EndMessage();
-                        stream.StartMessage(1);
-                        stream.WritePacked(playerControl.NetId);
-                        stream.Write((byte)254);
-                        stream.EndMessage();
-                        stream.EndMessage();
-
-                        messages += 3;
+                        AmongUsClient.Instance.SendOrDisconnect(stream);
+                        stream.Recycle();
                     }
-                    
-                    stream.EndMessage();
-                    AmongUsClient.Instance.SendOrDisconnect(stream);
-                    stream.Recycle();
 
                     playerControl.CachedPlayerData = PlayerControl.LocalPlayer.Data;
                 }, calls: 2); // WAITING FOR THE SLOTHS TO VERIFY THIS
@@ -441,20 +487,20 @@ namespace EHR
 
         public static void FixedUpdate()
         {
-            foreach (CustomNetObject cno in AllObjects.ToArray())
-                cno?.OnFixedUpdate();
+            for (int index = AllObjects.Count - 1; index >= 0; index--)
+                AllObjects[index]?.OnFixedUpdate();
         }
 
         public static CustomNetObject Get(int id)
         {
-            return AllObjects.FirstOrDefault(x => x.Id == id);
+            return AllObjects.Find(x => x.Id == id);
         }
 
         public static void Reset()
         {
             try
             {
-                AllObjects.ToArray().Do(x => x.Despawn());
+                AllObjects.ToArray().Do(x => x.Despawn(canPool: false));
                 AllObjects.Clear();
             }
             catch (Exception e) { Utils.ThrowException(e); }
@@ -607,51 +653,56 @@ namespace EHR
 
     public sealed class NaturalDisaster : CustomNetObject
     {
-        public NaturalDisaster(Vector2 position, float time, string sprite, string disasterName, SystemTypes? room)
+        public NaturalDisaster(Vector2 position, int time, string sprite, string disasterName, SystemTypes? room)
         {
             string name = Translator.GetString($"ND_{disasterName}");
-            string warning = $"<size=250%>{Math.Ceiling(time):N0}</size>\n{name}";
+            string warning = $"<size=250%>{time}</size>\n{name}";
 
             if (room.HasValue)
             {
                 warning = $"<#ff4444>{warning}</color>";
-                Main.EnumerateAlivePlayerControls().DoIf(x => x.IsInRoom(room.Value), x => x.ReactorFlash());
+
+                try { Main.EnumerateAlivePlayerControls().DoIf(x => x.IsInRoom(room.Value), x => x.ReactorFlash()); }
+                catch (Exception e) { Utils.ThrowException(e); }
             }
 
-            SpawnTimer = time;
+            TotalWarningTime = time;
             DisasterSprite = sprite;
             DisasterName = disasterName;
             DisasterNameTranslated = name;
             Room = room;
+            
+            SpawnTimer = Stopwatch.StartNew();
 
             CreateNetObject(warning, position);
         }
 
         public SystemTypes? Room { get; }
         public string DisasterName { get; }
-        public float SpawnTimer { get; private set; }
+        public Stopwatch SpawnTimer { get; }
+        public int TotalWarningTime { get; }
         private string DisasterSprite { get; }
         
-        private int TimeInt => (int)Math.Ceiling(SpawnTimer);
+        private int TimeInt => (int)(SpawnTimer.Elapsed.TotalSeconds);
+        private int PreviousTimeInt { get; set; }
         private string DisasterNameTranslated { get; }
 
         public void Update()
         {
-            if (float.IsNaN(SpawnTimer)) return;
+            if (!SpawnTimer.IsRunning) return;
+            
+            int newTime = TimeInt;
 
-            int oldTime = TimeInt;
-            SpawnTimer -= Time.fixedDeltaTime;
-
-            if (SpawnTimer <= 0f)
+            if (newTime >= TotalWarningTime)
             {
+                SpawnTimer.Stop();
                 if (!Room.HasValue) RpcChangeSprite(DisasterSprite);
-                SpawnTimer = float.NaN;
             }
             else
             {
-                int newTime = TimeInt;
-                if (oldTime == newTime) return;
-                string warning = $"<size=250%>{newTime:N0}</size>\n{DisasterNameTranslated}";
+                if (PreviousTimeInt == newTime) return;
+                PreviousTimeInt = newTime;
+                string warning = $"<size=250%>{TotalWarningTime - newTime}</size>\n{DisasterNameTranslated}";
                 if (Room.HasValue) warning = $"<#ff4444>{warning}</color>";
                 RpcChangeSprite(warning);
             }
@@ -660,7 +711,7 @@ namespace EHR
 
     internal sealed class Lightning : CustomNetObject
     {
-        private float Timer = 5f;
+        private readonly Stopwatch Timer = Stopwatch.StartNew();
 
         public Lightning(Vector2 position)
         {
@@ -670,8 +721,7 @@ namespace EHR
         protected override void OnFixedUpdate()
         {
             base.OnFixedUpdate();
-            Timer -= Time.fixedDeltaTime;
-            if (Timer <= 0) Despawn();
+            if (Timer.Elapsed.TotalSeconds >= 3f) Despawn();
         }
     }
 

@@ -769,7 +769,9 @@ internal static class MeetingHudStartPatch
 
         if (MeetingStates.FirstMeeting && CustomRoles.Workaholic.RoleExist() && Workaholic.WorkaholicGiveAdviceAlive.GetBool() && !Workaholic.WorkaholicCannotWinAtDeath.GetBool() /* && !Options.GhostIgnoreTasks.GetBool()*/)
         {
-            foreach (PlayerControl pc in Main.EnumerateAlivePlayerControls().Where(x => x.Is(CustomRoles.Workaholic)).ToArray()) Workaholic.WorkaholicAlive.Add(pc.PlayerId);
+            foreach (PlayerControl pc in Main.EnumerateAlivePlayerControls())
+                if (pc.Is(CustomRoles.Workaholic))
+                    Workaholic.WorkaholicAlive.Add(pc.PlayerId);
 
             List<string> workaholicAliveList = [];
             workaholicAliveList.AddRange(Workaholic.WorkaholicAlive.Select(whId => Main.AllPlayerNames[whId]));
@@ -781,7 +783,9 @@ internal static class MeetingHudStartPatch
         // Bait Notify
         if (MeetingStates.FirstMeeting && CustomRoles.Bait.RoleExist() && Options.BaitNotification.GetBool())
         {
-            foreach (PlayerControl pc in Main.EnumerateAlivePlayerControls().Where(x => x.Is(CustomRoles.Bait)).ToArray()) Main.BaitAlive.Add(pc.PlayerId);
+            foreach (PlayerControl pc in Main.EnumerateAlivePlayerControls())
+                if (pc.Is(CustomRoles.Bait))
+                    Main.BaitAlive.Add(pc.PlayerId);
 
             List<string> baitAliveList = [];
             baitAliveList.AddRange(Main.BaitAlive.Select(whId => Main.AllPlayerNames[whId]));

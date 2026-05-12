@@ -81,7 +81,7 @@ internal static class CustomRoleSelector
         Dictionary<RoleAssignType, List<RoleAssignInfo>> roles = [];
         Enum.GetValues<RoleAssignType>().Do(x => roles[x] = []);
 
-        foreach (byte id in Main.SetRoles.Keys.Where(id => Utils.GetPlayerById(id) == null).ToArray()) Main.SetRoles.Remove(id);
+        foreach (byte id in Main.SetRoles.Keys.Where(id => !Utils.GetPlayerById(id)).ToArray()) Main.SetRoles.Remove(id);
 
         (bool Spawning, bool OneIsImp) loversData = (Lovers.LegacyLovers.GetBool(), rd.Next(100) < Lovers.LovingImpostorSpawnChance.GetInt());
         loversData.Spawning &= rd.Next(100) < Options.CustomAdtRoleSpawnRate[CustomRoles.Lovers].GetInt();
@@ -559,7 +559,7 @@ internal static class CustomRoleSelector
     {
         if (Options.CurrentGameMode != CustomGameMode.Standard) return;
 
-        foreach (byte id in Main.SetAddOns.Keys.Where(id => Utils.GetPlayerById(id) == null).ToArray()) Main.SetAddOns.Remove(id);
+        foreach (byte id in Main.SetAddOns.Keys.Where(id => !Utils.GetPlayerById(id)).ToArray()) Main.SetAddOns.Remove(id);
 
         AddonRolesList = [];
 

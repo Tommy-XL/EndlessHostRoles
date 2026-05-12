@@ -81,7 +81,7 @@ internal class Asthmatic : IAddon
     {
         if (Timers.Count == 0) return;
 
-        List<byte> toRemove = [];
+        List<byte> toRemove = null;
         
         foreach ((byte id, Counter counter) in Timers)
         {
@@ -89,6 +89,7 @@ internal class Asthmatic : IAddon
 
             if (state.IsDead || !state.SubRoles.Contains(CustomRoles.Asthmatic) || state.MainRole == CustomRoles.Pestilence)
             {
+                toRemove ??= [];
                 toRemove.Add(id);
                 continue;
             }
@@ -96,7 +97,7 @@ internal class Asthmatic : IAddon
             counter.Update();
         }
         
-        if (toRemove.Count == 0) return;
+        if (toRemove == null) return;
 
         foreach (byte id in toRemove)
         {

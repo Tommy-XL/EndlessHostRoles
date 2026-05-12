@@ -613,7 +613,7 @@ public static class TheMindGame
         Round = 5;
 
         HiddenPoints.Clear();
-        EjectedPlayers.ToValidPlayers().FindAll(x => !x.IsAlive()).ForEach(x => x.RpcRevive());
+        EjectedPlayers.ToValidPlayers().Where(x => !x.IsAlive()).Do(x => x.RpcRevive());
 
         yield return NotifyEveryone("TMG.Notify.Round4End", 3);
         if (Stop) yield break;

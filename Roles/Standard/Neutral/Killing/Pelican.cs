@@ -85,7 +85,7 @@ public class Pelican : RoleBase
         if (playerId != byte.MaxValue)
         {
             writer.Write(EatenList[playerId].Count);
-            foreach (byte el in EatenList[playerId].ToArray()) writer.Write(el);
+            foreach (byte el in EatenList[playerId]) writer.Write(el);
         }
 
         AmongUsClient.Instance.FinishRpcImmediately(writer);

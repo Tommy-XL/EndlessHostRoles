@@ -115,8 +115,8 @@ public class EvilTracker : RoleBase
 
     public static void OnAnyoneMurder(PlayerControl killer, PlayerControl target)
     {
-        if (CanSeeKillFlash && killer != null && killer.Is(CustomRoleTypes.Impostor) && killer != target && !PlayerIdList.Contains(killer.PlayerId))
-            PlayerIdList.ToValidPlayers().ForEach(x => x.KillFlash());
+        if (CanSeeKillFlash && killer.Is(CustomRoleTypes.Impostor) && killer != target && !PlayerIdList.Contains(killer.PlayerId))
+            PlayerIdList.ToValidPlayers().Do(x => x.KillFlash());
     }
 
     public override bool OnShapeshift(PlayerControl shapeshifter, PlayerControl target, bool shapeshifting)
@@ -227,7 +227,7 @@ public class EvilTracker : RoleBase
         string text = Utils.ColorString(Palette.ImpostorRed, TargetArrow.GetArrows(seer, target.PlayerId));
         PlainShipRoom room = Main.PlayerStates[target.PlayerId].LastRoom;
 
-        if (room == null)
+        if (!room)
             text += Utils.ColorString(Color.gray, "@" + GetString("FailToTrack"));
         else
             text += Utils.ColorString(Palette.ImpostorRed, "@" + GetString(room.RoomId.ToString()));

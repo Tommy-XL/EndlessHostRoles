@@ -107,7 +107,7 @@ public class Lightning : RoleBase
 
     public static bool CheckLightningMurder(PlayerControl killer, PlayerControl target, bool force = false)
     {
-        if (killer == null || target == null || (!killer.Is(CustomRoles.Lightning) && !force)) return false;
+        if (!killer.Is(CustomRoles.Lightning) && !force) return false;
 
         if (IsGhost(target)) return false;
 
@@ -155,11 +155,11 @@ public class Lightning : RoleBase
 
         List<byte> deList = [];
 
-        foreach (byte ghost in GhostPlayer.ToArray())
+        foreach (byte ghost in GhostPlayer)
         {
             PlayerControl gs = Utils.GetPlayerById(ghost);
 
-            if (gs == null || !gs.IsAlive() || gs.Data.Disconnected)
+            if (!gs || !gs.IsAlive() || gs.Data.Disconnected)
             {
                 //deList.Add(gs.PlayerId); // This will always result in a null reference exception
                 continue;
@@ -181,7 +181,7 @@ public class Lightning : RoleBase
         {
             GhostPlayer.RemoveAll(deList.Contains);
 
-            foreach (byte gs in deList.ToArray())
+            foreach (byte gs in deList)
             {
                 SendRPC(gs);
                 Utils.NotifyRoles(SpecifySeer: Utils.GetPlayerById(gs));
@@ -193,10 +193,10 @@ public class Lightning : RoleBase
     {
         if (!(IsEnable || CustomRoles.Lightning.IsEnable())) return;
 
-        foreach (byte ghost in GhostPlayer.ToArray())
+        foreach (byte ghost in GhostPlayer)
         {
             PlayerControl gs = Utils.GetPlayerById(ghost);
-            if (gs == null) continue;
+            if (!gs) continue;
 
             CheckForEndVotingPatch.TryAddAfterMeetingDeathPlayers(PlayerState.DeathReason.Quantization, gs.PlayerId);
             gs.SetRealKiller(RealKiller[gs.PlayerId]);

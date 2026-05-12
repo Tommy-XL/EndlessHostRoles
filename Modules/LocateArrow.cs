@@ -72,6 +72,7 @@ internal static class LocateArrow
     {
         ArrowInfo arrowInfo = new(seer, locate);
         List<ArrowInfo> removeList = new(LocateArrows.Keys.Where(k => k.Equals(arrowInfo)));
+        if (removeList.Count == 0) return;
         removeList.ForEach(a => LocateArrows.Remove(a));
 
         Utils.SendRPC(CustomRPC.Arrow, false, 2, seer, locate);
@@ -85,8 +86,8 @@ internal static class LocateArrow
     public static void RemoveAllTarget(byte seer)
     {
         List<ArrowInfo> removeList = new(LocateArrows.Keys.Where(k => k.From == seer));
+        if (removeList.Count == 0) return;
         removeList.ForEach(a => LocateArrows.Remove(a));
-
         Utils.SendRPC(CustomRPC.Arrow, false, 3, seer);
         Logger.Info($"Removed all locate arrows for: {seer} ({seer.GetPlayer()?.GetRealName()})", "LocateArrow");
     }
@@ -129,7 +130,7 @@ internal static class LocateArrow
 
         var update = false;
 
-        foreach (ArrowInfo arrowInfo in arrowList.ToArray())
+        foreach (ArrowInfo arrowInfo in arrowList)
         {
             Vector3 loc = arrowInfo.To;
 

@@ -1170,7 +1170,7 @@ internal static class TaskPanelBehaviourPatch
             {
                 Dictionary<byte, string> SummaryText3 = new Dictionary<byte, string>();
 
-                foreach (byte id in Main.PlayerStates.Keys.ToArray())
+                foreach (byte id in Main.PlayerStates.Keys)
                 {
                     string name = Main.AllPlayerNames[id].RemoveHtmlTags().Replace("\r\n", string.Empty);
                     var summary = $"{Utils.GetProgressText(id)}  {Utils.ColorString(Main.PlayerColors[id], name)}";

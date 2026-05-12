@@ -60,21 +60,29 @@ public static class NameNotifyManager
         if (now == LastUpdate) return;
         LastUpdate = now;
 
-        List<byte> toNotify = [];
+        List<byte> toNotify = null;
 
         foreach ((byte id, Dictionary<string, long> notifies) in Notifies)
         {
-            List<string> toRemove = [];
+            List<string> toRemove = null;
 
-            notifies.DoIf(x => x.Value <= now, x => toRemove.Add(x.Key));
+            notifies.DoIf(x => x.Value <= now, x =>
+            {
+                toRemove ??= [];
+                toRemove.Add(x.Key);
+            });
 
-            toRemove.ForEach(x => notifies.Remove(x));
-            if (toRemove.Count > 0) toNotify.Add(id);
+            if (toRemove != null)
+            {
+                toRemove.ForEach(x => notifies.Remove(x));
+                toNotify ??= [];
+                toNotify.Add(id);
+            }
         }
 
-        if (toNotify.Count == 0 || !AmongUsClient.Instance.AmHost) return;
+        if (!AmongUsClient.Instance.AmHost) return;
 
-        toNotify.ToValidPlayers().ForEach(x => Utils.NotifyRoles(SpecifySeer: x, SpecifyTarget: x));
+        toNotify?.ToValidPlayers().Do(x => Utils.NotifyRoles(SpecifySeer: x, SpecifyTarget: x));
     }
 
     public static bool GetNameNotify(PlayerControl player, out string name)

@@ -85,9 +85,9 @@ public abstract class CustomSabotage
 
     public static void UpdateAll()
     {
-        foreach (CustomSabotage sabotage in Instances.ToArray())
+        for (int index = Instances.Count - 1; index >= 0; index--)
         {
-            try { sabotage.Update(); }
+            try { Instances[index].Update(); }
             catch (Exception e) { Utils.ThrowException(e); }
         }
 

@@ -109,14 +109,18 @@ internal static class HotPotato
         switch (reader.ReadPackedInt32())
         {
             case 1:
-                int timeLeft = reader.ReadPackedInt32();
-                HotPotatoState.TimeLeft = timeLeft;
+                HotPotatoState.TimeLeft = reader.ReadPackedInt32();
                 break;
             case 2:
                 HotPotatoState.HolderID = reader.ReadByte();
                 HotPotatoState.LastHolderID = reader.ReadByte();
                 break;
         }
+    }
+
+    public static void RecordDeath(byte id, int time)
+    {
+        SurvivalTimes[id] = time;
     }
 
     public static int GetKillInterval()
@@ -159,7 +163,7 @@ internal static class HotPotato
             if (HotPotatoState.TimeLeft <= 0)
             {
                 holder.Suicide();
-                SurvivalTimes[HotPotatoState.HolderID] = (HotPotatoState.RoundNum - 1) * GetKillInterval();
+                RecordDeath(HotPotatoState.HolderID, (HotPotatoState.RoundNum - 1) * GetKillInterval());
                 PassHotPotato();
 
                 if (holder.AmOwner)

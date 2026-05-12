@@ -19,7 +19,7 @@ namespace EHR.Gamemodes;
 public static class NaturalDisasters
 {
     private const float Range = 1.5f;
-    private static List<Type> AllDisasters = [];
+    private static Dictionary<string, Type> AllDisasters = [];
     private static readonly List<Disaster> ActiveDisasters = [];
     private static readonly List<NaturalDisaster> PreparingDisasters = [];
     public static readonly Dictionary<byte, int> SurvivalTimes = [];
@@ -38,7 +38,6 @@ public static class NaturalDisasters
 
     private static readonly string[] LimitReachedOptions =
     [
-        "ND_LimitReachedOptions.OnlySpawnInstantDisasters",
         "ND_LimitReachedOptions.RemoveRandom",
         "ND_LimitReachedOptions.RemoveOldest"
     ];
@@ -55,9 +54,9 @@ public static class NaturalDisasters
         return ActiveDisasters;
     }
 
-    public static List<Type> GetAllDisasters()
+    public static IEnumerable<Type> GetAllDisasters()
     {
-        return AllDisasters;
+        return AllDisasters.Values;
     }
 
     public static int FrequencyOfDisasters => DisasterFrequency.GetInt();
@@ -90,7 +89,7 @@ public static class NaturalDisasters
             .SetParent(LimitMaximumDisastersAtOnce)
             .SetColor(color);
 
-        WhenLimitIsReached = new StringOptionItem(id++, "ND_WhenLimitIsReached", LimitReachedOptions, 2, TabGroup.GameSettings)
+        WhenLimitIsReached = new StringOptionItem(id++, "ND_WhenLimitIsReached", LimitReachedOptions, 1, TabGroup.GameSettings)
             .SetGameMode(gameMode)
             .SetParent(LimitMaximumDisastersAtOnce)
             .SetColor(color);
@@ -110,20 +109,24 @@ public static class NaturalDisasters
 
         LoadAllDisasters();
 
-        AllDisasters.ConvertAll(x => x.Name).ForEach(x => DisasterSpawnChances[x] = new IntegerOptionItem(id++, "ND_Disaster.SpawnChance", new(0, 100, 5), 50, TabGroup.GameSettings)
-            .SetGameMode(gameMode)
-            .SetColor(color)
-            .SetValueFormat(OptionFormat.Percent)
-            .AddReplacement(("{disaster}", Translator.GetString($"ND_{x}"))));
+        foreach ((string name, Type type) in AllDisasters)
+        {
+            DisasterSpawnChances[name] = new IntegerOptionItem(id++, "ND_Disaster.SpawnChance", new(0, 100, 5), 50, TabGroup.GameSettings)
+                .SetGameMode(gameMode)
+                .SetColor(color)
+                .SetHeader(true)
+                .SetValueFormat(OptionFormat.Percent)
+                .AddReplacement(("{disaster}", Translator.GetString($"ND_{name}")));
 
-        AllDisasters.ForEach(x => x.GetMethod("SetupOwnCustomOption")?.Invoke(null, null));
+            type.GetMethod("SetupOwnCustomOption")?.Invoke(null, null);
+        }
     }
 
     public static void LoadAllDisasters()
     {
         AllDisasters = Main.AllTypes
             .Where(x => x.IsClass && !x.IsAbstract && x.IsSubclassOf(typeof(Disaster)))
-            .ToList();
+            .ToDictionary(x => x.Name, x => x);
     }
 
     public static void OnGameStart()
@@ -164,26 +167,31 @@ public static class NaturalDisasters
 
     public static void RebuildSuffixText()
     {
-        var allRooms = ShipStatus.Instance.AllRooms;
-        var collapsedRooms = BuildingCollapse.CollapsedRooms;
-        string cb;
-
-        if (allRooms.Count / 2 <= collapsedRooms.Count)
+        try
         {
-            SystemTypes[] remainingRooms = allRooms.Select(x => x.RoomId).Where(x => x is not (SystemTypes.Hallway or SystemTypes.Outside) && !x.ToString().Contains("Decontamination")).Except(collapsedRooms.ConvertAll(x => x.RoomId)).ToArray();
-            cb = string.Format(Translator.GetString("AvailableBuildings"), remainingRooms.Length > 0
-                ? remainingRooms.Select(x => Translator.GetString($"{x}")).Distinct().Join()
-                : $"<#ff0000>{Translator.GetString("None")}</color>");
-        }
-        else
-        {
-            cb = string.Format(Translator.GetString("CollapsedBuildings"), collapsedRooms.Count > 0
-                ? collapsedRooms.Select(x => Translator.GetString($"{x.RoomId}")).Distinct().Join()
-                : Translator.GetString("None"));
-        }
+            var allRooms = ShipStatus.Instance.AllRooms;
+            var collapsedRooms = BuildingCollapse.CollapsedRooms;
+            string cb;
 
-        string ts = ActiveDisasters.Exists(x => x is Thunderstorm) ? $"\n{Translator.GetString("OngoingThunderstorm")}" : string.Empty;
-        SuffixText = $"<size=70%>{cb}{ts}</size>";
+            if (allRooms.Count / 2 <= collapsedRooms.Count)
+            {
+                SystemTypes[] remainingRooms = allRooms.Select(x => x.RoomId).Where(x => x is not (SystemTypes.Hallway or SystemTypes.Outside or SystemTypes.Decontamination2 or SystemTypes.Decontamination3)).Except(collapsedRooms.ConvertAll(x => x.RoomId)).ToArray();
+                cb = string.Format(Translator.GetString("AvailableBuildings"), remainingRooms.Length > 0
+                    ? remainingRooms.Select(x => Translator.GetString($"{x}")).Distinct().Join()
+                    : $"<#ff0000>{Translator.GetString("None")}</color>");
+            }
+            else
+            {
+                cb = string.Format(Translator.GetString("CollapsedBuildings"), collapsedRooms.Count > 0
+                    ? collapsedRooms.Select(x => Translator.GetString($"{x.RoomId}")).Distinct().Join()
+                    : Translator.GetString("None"));
+            }
+
+            string ts = ActiveDisasters.Exists(x => x is Thunderstorm) ? $"\n{Translator.GetString("OngoingThunderstorm")}" : string.Empty;
+            string rp = string.Format(Translator.GetString("ND_RemainingPlayers"), Utils.ColorString(Utils.GetRoleColor(CustomRoles.NDPlayer), Main.AllAlivePlayerControls.Count.ToString()));
+            SuffixText = $"<size=70%>{cb}{ts}\n{rp}</size>";
+        }
+        catch (Exception e) { Utils.ThrowException(e); }
     }
 
     public static int SurvivalTime(byte id)
@@ -191,9 +199,13 @@ public static class NaturalDisasters
         return SurvivalTimes.GetValueOrDefault(id, 0);
     }
 
+    private static readonly List<(byte id, PlayerState.DeathReason deathReason, long recordTimeStamp)> DeathMessageQueue = [];
+
     public static void RecordDeath(PlayerControl pc, PlayerState.DeathReason deathReason)
     {
-        SurvivalTimes[pc.PlayerId] = (int)(Utils.TimeStamp - IntroCutsceneDestroyPatch.IntroDestroyTS - FixedUpdatePatch.WaitTime);
+        RebuildSuffixText();
+        long now = Utils.TimeStamp;
+        SurvivalTimes[pc.PlayerId] = (int)(now - IntroCutsceneDestroyPatch.IntroDestroyTS - FixedUpdatePatch.WaitTime);
 
         string message = Translator.GetString($"ND_DRLaughMessage-{IRandom.Instance.Next(4)}.{deathReason}");
         Color color = DeathReasonColor(deathReason);
@@ -201,10 +213,7 @@ public static class NaturalDisasters
         LateTask.New(() => pc.Notify(message, 20f), 1f, $"{pc.GetRealName()} died with the reason {deathReason}, survived for {SurvivalTime(pc.PlayerId)} seconds");
         Utils.SendRPC(CustomRPC.NaturalDisastersSync, pc.PlayerId, SurvivalTimes[pc.PlayerId]);
 
-        var aapc = Main.AllAlivePlayerControls;
-        string remaining = string.Format(Translator.GetString("ND_RemainingPlayers"), Utils.ColorString(Utils.GetRoleColor(CustomRoles.NDPlayer), aapc.Count.ToString()));
-        string msgOthers = string.Format(Translator.GetString($"ND_DRLaughMessageOthers-{IRandom.Instance.Next(4)}.{deathReason}"), pc.PlayerId.ColoredPlayerName());
-        aapc.NotifyPlayers($"<#ff0000>[╳]</color> {Utils.ColorString(color, msgOthers)} {remaining}", 10f);
+        DeathMessageQueue.Add((pc.PlayerId, deathReason, now));
     }
 
     private static Color DeathReasonColor(PlayerState.DeathReason deathReason)
@@ -240,7 +249,6 @@ public static class NaturalDisasters
     public static class FixedUpdatePatch
     {
         public static readonly Stopwatch LastDisasterTimer = new();
-        private static readonly Stopwatch FailSafeTimer = new();
         private static long LastSync = Utils.TimeStamp;
         public static int WaitTime;
 
@@ -269,46 +277,40 @@ public static class NaturalDisasters
             
             UpdatePreparingDisasters();
 
-            for (var index = 0; index < ActiveDisasters.Count; index++)
-            {
-                if (ActiveDisasters[index].Update())
-                    index--;
-            }
+            for (int index = ActiveDisasters.Count - 1; index >= 0; index--)
+                ActiveDisasters[index].Update();
 
             Sinkhole.OnFixedUpdate();
             BuildingCollapse.OnFixedUpdate();
 
             if (LimitMaximumDisastersAtOnce.GetBool())
             {
-                int numDisasters = ActiveDisasters.Count + PreparingDisasters.Count + Sinkhole.Sinkholes.Count;
+                int numDisasters = ActiveDisasters.Count + Sinkhole.Sinkholes.Count;
 
                 if (numDisasters > MaximumDisastersAtOnce.GetInt())
                 {
-                    switch (WhenLimitIsReached.GetValue())
+                    if (Sinkhole.Sinkholes.Count > 0)
                     {
-                        case 0:
+                        Sinkhole.RemoveRandomSinkhole();
+                    }
+                    else
+                    {
+                        switch (WhenLimitIsReached.GetValue())
                         {
-                            AllDisasters.RemoveAll(x => x.Name is "Earthquake" or "VolcanoEruption" or "Tornado" or "Thunderstorm" or "SandStorm" or "Tsunami");
-                            break;
-                        }
-                        case 1 or 2 when Sinkhole.Sinkholes.Count > 0:
-                        {
-                            Sinkhole.RemoveRandomSinkhole();
-                            break;
-                        }
-                        case 1:
-                        {
-                            Disaster remove = PreferRemovingThunderstorm.GetBool() && ActiveDisasters.FindFirst(x => x is Thunderstorm, out Disaster thunderstorm) ? thunderstorm : ActiveDisasters.RandomElement();
-                            remove?.Duration = 0;
-                            remove?.RemoveIfExpired();
-                            break;
-                        }
-                        case 2:
-                        {
-                            Disaster oldest = ActiveDisasters.MinBy(x => x.StartTimeStamp);
-                            oldest.Duration = 0;
-                            oldest.RemoveIfExpired();
-                            break;
+                            case 0:
+                            {
+                                Disaster remove = PreferRemovingThunderstorm.GetBool() && ActiveDisasters.FindFirst(x => x is Thunderstorm, out Disaster thunderstorm) ? thunderstorm : ActiveDisasters.RandomElement();
+                                remove?.Duration = 0;
+                                remove?.RemoveIfExpired();
+                                break;
+                            }
+                            case 1:
+                            {
+                                Disaster oldest = ActiveDisasters.MinBy(x => x.StartTimeStamp);
+                                oldest.Duration = 0;
+                                oldest.RemoveIfExpired();
+                                break;
+                            }
                         }
                     }
                 }
@@ -324,40 +326,36 @@ public static class NaturalDisasters
             if (LastDisasterTimer.Elapsed.TotalSeconds >= frequency)
             {
                 LastDisasterTimer.Restart();
-                List<Type> disasters = AllDisasters.SelectMany(x => Enumerable.Repeat(x, DisasterSpawnChances[x.Name].GetInt() / 5)).ToList();
                 
+                Dictionary<string, Type> pool = AllDisasters.ToDictionary(x => x.Key, x => x.Value);
+
                 if (ActiveDisasters.Exists(x => x is Thunderstorm))
-                    disasters.RemoveAll(x => x.Name == "Thunderstorm");
+                    pool.Remove("Thunderstorm");
+                
+                (SystemTypes CollapsingRoom, Vector2 WarningPosition) buildingCollapseInfo = (default(SystemTypes), default(Vector2));
+                PlainShipRoom[] nonCollapsedRooms = ShipStatus.Instance.AllRooms.Where(x => x.RoomId is not (SystemTypes.Hallway or SystemTypes.Outside or SystemTypes.Decontamination2 or SystemTypes.Decontamination3)).Except(BuildingCollapse.CollapsedRooms).ToArray();
 
-                if ((Main.LIMap ? ShipStatus.Instance.AllRooms.Count : RandomSpawn.SpawnMap.GetSpawnMap().Positions.Count - (Main.CurrentMap == MapNames.Polus ? 3 : 1)) <= BuildingCollapse.CollapsedRooms.Count)
-                    disasters.RemoveAll(x => x.Name == "BuildingCollapse");
+                if (nonCollapsedRooms.Length == 0)
+                {
+                    pool.Remove("BuildingCollapse");
+                }
+                else
+                {
+                    PlainShipRoom collapsingRoom = nonCollapsedRooms.RandomElement();
+                    buildingCollapseInfo = (collapsingRoom.RoomId, (Main.LIMap ? [] : RandomSpawn.SpawnMap.GetSpawnMap().Positions).TryGetValue(collapsingRoom.RoomId, out Vector2 spawnLocation) ? spawnLocation : collapsingRoom.transform.position);
+                }
 
-                Type disaster = disasters.RandomElement();
+                Type disaster = pool.SelectMany(x => Enumerable.Repeat(x.Value, DisasterSpawnChances[x.Key].GetInt() / 5)).RandomElement();
 
                 if (disaster.Name == "Thunderstorm")
                 {
                     _ = new Thunderstorm(Vector2.zero, null);
                     return;
                 }
-                
-                KeyValuePair<SystemTypes, Vector2> roomKvp;
-
-                if (Main.LIMap)
-                {
-                    var plainShipRoom = ShipStatus.Instance.AllRooms.Where(x => x.RoomId is not (SystemTypes.Hallway or SystemTypes.Outside) && !x.RoomId.ToString().Contains("Decontamination")).Except(BuildingCollapse.CollapsedRooms).RandomElement();
-                    roomKvp = new KeyValuePair<SystemTypes, Vector2>(plainShipRoom.RoomId, plainShipRoom.transform.position);
-                }
-                else
-                {
-                    roomKvp = RandomSpawn.SpawnMap.GetSpawnMap().Positions
-                        .Where(x => x.Key is not (SystemTypes.Hallway or SystemTypes.Outside) && !x.Key.ToString().Contains("Decontamination"))
-                        .ExceptBy(BuildingCollapse.CollapsedRooms.ConvertAll(x => x.RoomId), x => x.Key)
-                        .RandomElement();
-                }
 
                 var aapc = Main.AllAlivePlayerControls;
                 bool bc = disaster.Name == "BuildingCollapse";
-                bool spawnOnPlayer = aapc.Count > 0 && DisasterSpawnMode.GetValue() switch
+                bool spawnOnPlayer = !bc && aapc.Count > 0 && DisasterSpawnMode.GetValue() switch
                 {
                     0 => true,
                     1 => false,
@@ -365,25 +363,13 @@ public static class NaturalDisasters
                 };
                 
                 Vector2 position = bc
-                    ? roomKvp.Value
+                    ? buildingCollapseInfo.WarningPosition
                     :  spawnOnPlayer
                         ? aapc.RandomElement().Pos()
-                        : RandomInRoomPosition();
+                        : new(Random.Range(MapBounds.X.Left, MapBounds.X.Right), Random.Range(MapBounds.Y.Bottom, MapBounds.Y.Top));
 
-                SystemTypes? room = bc ? roomKvp.Key : null;
+                SystemTypes? room = bc ? buildingCollapseInfo.CollapsingRoom : null;
                 AddPreparingDisaster(position, disaster.Name, room);
-
-                static Vector2 RandomInRoomPosition()
-                {
-                    FailSafeTimer.Start();
-                    Vector2 vector2;
-
-                    do vector2 = new(Random.Range(MapBounds.X.Left, MapBounds.X.Right), Random.Range(MapBounds.Y.Top, MapBounds.Y.Bottom));
-                    while (FailSafeTimer.ElapsedMilliseconds < 3 && !vector2.GetPlainShipRoom());
-
-                    FailSafeTimer.Reset();
-                    return vector2;
-                }
             }
 
             if (now - LastSync >= 15)
@@ -399,28 +385,36 @@ public static class NaturalDisasters
                 LastSync = now;
                 Utils.MarkEveryoneDirtySettings();
             }
+
+            if (DeathMessageQueue.Count > 0 && DeathMessageQueue.FindFirst(x => x.recordTimeStamp + 3 <= now, out var expired))
+            {
+                var names = string.Join(", ", DeathMessageQueue.Where(x => x.deathReason == expired.deathReason).Select(x => x.id.ColoredPlayerName()));
+                string msgOthers = string.Format(Translator.GetString($"ND_DRLaughMessageOthers-{IRandom.Instance.Next(4)}.{expired.deathReason}"), names);
+                Main.EnumerateAlivePlayerControls().NotifyPlayers($"<#ff0000>[╳]</color> {Utils.ColorString(DeathReasonColor(expired.deathReason), msgOthers)}");
+                DeathMessageQueue.RemoveAll(x => x.deathReason == expired.deathReason);
+            }
         }
 
         public static void UpdatePreparingDisasters()
         {
-            for (var index = 0; index < PreparingDisasters.Count; index++)
+            for (var index = PreparingDisasters.Count - 1; index >= 0; index--)
             {
                 NaturalDisaster naturalDisaster = PreparingDisasters[index];
                 naturalDisaster.Update();
 
-                if (float.IsNaN(naturalDisaster.SpawnTimer))
+                if (!naturalDisaster.SpawnTimer.IsRunning)
                 {
-                    Type type = AllDisasters.Find(d => d.Name == naturalDisaster.DisasterName);
+                    Type type = AllDisasters[naturalDisaster.DisasterName];
                     Activator.CreateInstance(type, naturalDisaster.Position, naturalDisaster);
                     PreparingDisasters.RemoveAt(index);
-                    index--;
                 }
             }
         }
 
         public static void AddPreparingDisaster(Vector2 position, string disasterName, SystemTypes? room)
         {
-            PreparingDisasters.Add(new(position, DisasterWarningTime.GetFloat(), Sprite(disasterName), disasterName, room));
+            try { PreparingDisasters.Add(new(position, DisasterWarningTime.GetInt(), Sprite(disasterName), disasterName, room)); }
+            catch (Exception e) { Utils.ThrowException(e); }
         }
     }
     
@@ -446,6 +440,9 @@ public static class NaturalDisasters
                 return;
             case CustomGameMode.Mingle:
                 Mingle.HandleDisconnect();
+                goto default;
+            case CustomGameMode.HotPotato:
+                HotPotato.RecordDeath(pc.PlayerId, (int)(Utils.TimeStamp - IntroCutsceneDestroyPatch.IntroDestroyTS - FixedUpdatePatch.WaitTime));
                 goto default;
             default:
                 pc.Suicide(deathReason);
@@ -515,7 +512,6 @@ public static class NaturalDisasters
             Color color = Utils.GetRoleColor(CustomRoles.NDPlayer);
 
             DurationOpt = new IntegerOptionItem(id, "ND_Earthquake.DurationOpt", new(1, 120, 1), 30, TabGroup.GameSettings)
-                .SetHeader(true)
                 .SetGameMode(CustomGameMode.NaturalDisasters)
                 .SetColor(color)
                 .SetValueFormat(OptionFormat.Seconds);
@@ -612,7 +608,6 @@ public static class NaturalDisasters
             Color color = Utils.GetRoleColor(CustomRoles.NDPlayer);
 
             FlowStepDelay = new FloatOptionItem(id, "ND_VolcanoEruption.FlowStepDelay", new(0.5f, 5f, 0.5f), 1f, TabGroup.GameSettings)
-                .SetHeader(true)
                 .SetGameMode(CustomGameMode.NaturalDisasters)
                 .SetColor(color)
                 .SetValueFormat(OptionFormat.Seconds);
@@ -679,7 +674,6 @@ public static class NaturalDisasters
             Color color = Utils.GetRoleColor(CustomRoles.NDPlayer);
 
             DurationOpt = new IntegerOptionItem(id, "ND_Tornado.DurationOpt", new(1, 120, 1), 20, TabGroup.GameSettings)
-                .SetHeader(true)
                 .SetGameMode(CustomGameMode.NaturalDisasters)
                 .SetColor(color)
                 .SetValueFormat(OptionFormat.Seconds);
@@ -789,7 +783,6 @@ public static class NaturalDisasters
             Color color = Utils.GetRoleColor(CustomRoles.NDPlayer);
 
             DurationOpt = new IntegerOptionItem(id, "ND_Thunderstorm.DurationOpt", new(1, 120, 1), 20, TabGroup.GameSettings)
-                .SetHeader(true)
                 .SetGameMode(CustomGameMode.NaturalDisasters)
                 .SetColor(color)
                 .SetValueFormat(OptionFormat.Seconds);
@@ -864,7 +857,6 @@ public static class NaturalDisasters
             Color color = Utils.GetRoleColor(CustomRoles.NDPlayer);
 
             DurationOpt = new IntegerOptionItem(id, "ND_SandStorm.DurationOpt", new(1, 120, 1), 30, TabGroup.GameSettings)
-                .SetHeader(true)
                 .SetGameMode(CustomGameMode.NaturalDisasters)
                 .SetColor(color)
                 .SetValueFormat(OptionFormat.Seconds);
@@ -1021,7 +1013,6 @@ public static class NaturalDisasters
             Color color = Utils.GetRoleColor(CustomRoles.NDPlayer);
 
             MovingSpeed = new FloatOptionItem(id, "ND_Tsunami.MovingSpeed", new(0.25f, 10f, 0.25f), 2f, TabGroup.GameSettings)
-                .SetHeader(true)
                 .SetGameMode(CustomGameMode.NaturalDisasters)
                 .SetColor(color)
                 .SetValueFormat(OptionFormat.Multiplier);

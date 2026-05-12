@@ -2549,19 +2549,30 @@ public static class Utils
 
     public static PlayerControl GetPlayerById(int playerId, bool fast = true)
     {
-        if (playerId is > byte.MaxValue or < byte.MinValue) return null;
-
-        if (fast && GameStates.InGame && Main.PlayerStates.TryGetValue((byte)playerId, out PlayerState state) && state.Player) return state.Player;
-
-        if (playerId == PlayerControl.LocalPlayer.PlayerId) return PlayerControl.LocalPlayer;
-
-        foreach (var pc in PlayerControl.AllPlayerControls)
+        try
         {
-            if (pc.PlayerId == playerId)
-                return pc;
-        }
+            if (playerId == PlayerControl.LocalPlayer.PlayerId)
+                return PlayerControl.LocalPlayer;
 
-        return null;
+            byte id = (byte)playerId;
+
+            if (fast && GameStates.InGame &&
+                Main.PlayerStates.TryGetValue(id, out PlayerState state) &&
+                state.Player) { return state.Player; }
+
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.PlayerId == id)
+                    return pc;
+            }
+
+            return null;
+        }
+        catch (Exception e)
+        {
+            ThrowException(e);
+            return null;
+        }
     }
 
     public static void SetupLongRoleDescriptions()
@@ -4534,8 +4545,8 @@ public static class Utils
                             packedWriter.WritePacked(AmongUsClient.Instance.GameId);
                         }
 
-                        pc.SetChatVisible(visible, packedWriter);
-                        messages++;
+                        if (pc.SetChatVisible(visible, packedWriter))
+                            messages++;
                     }
 
                     packedWriter.EndMessage();

@@ -143,7 +143,7 @@ public class Spider : RoleBase
     public override void OnFixedUpdate(PlayerControl pc)
     {
         long now = Utils.TimeStamp;
-        List<Vector2> toRemove = [];
+        List<Vector2> toRemove = null;
         
         foreach ((Vector2 pos, Dictionary<byte, long> trapped) in Webs)
         {
@@ -152,6 +152,7 @@ public class Spider : RoleBase
             
             if (trapped.Values.Min() <= now)
             {
+                toRemove ??= [];
                 toRemove.Add(pos);
                 LateTask.New(() =>
                 {
@@ -165,7 +166,7 @@ public class Spider : RoleBase
             }
         }
         
-        toRemove.ForEach(x =>
+        toRemove?.ForEach(x =>
         {
             Webs.Remove(x);
             LocateArrow.Remove(pc.PlayerId, x);

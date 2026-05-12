@@ -1195,35 +1195,47 @@ public static class GuessManager
         [SuppressMessage("ReSharper", "UnusedMember.Local")]
         public static void Postfix()
         {
-            if (TextTemplate) Object.Destroy(TextTemplate.gameObject);
-            if (GuesserUI) Object.Destroy(GuesserUI);
-
-            foreach (List<Transform> roleButtonsValue in RoleButtons.Values)
-            {
-                foreach (Transform transform in roleButtonsValue)
-                {
-                    if (transform?.gameObject)
-                        Object.Destroy(transform.gameObject);
-                }
-            }
-
-            foreach (SpriteRenderer spriteRenderer in RoleSelectButtons.Values)
-            {
-                if (spriteRenderer?.gameObject)
-                    Object.Destroy(spriteRenderer.gameObject);
-            }
-
-            foreach (SpriteRenderer spriteRenderer in PageButtons)
-            {
-                if (spriteRenderer?.gameObject)
-                    Object.Destroy(spriteRenderer.gameObject);
-            }
-            
+            if (TextTemplate && TextTemplate.gameObject) Object.Destroy(TextTemplate.gameObject);
             TextTemplate = null;
+            
+            if (GuesserUI) Object.Destroy(GuesserUI);
             GuesserUI = null;
-            RoleButtons.Clear();
-            RoleSelectButtons.Clear();
-            PageButtons.Clear();
+
+            if (RoleButtons != null)
+            {
+                foreach (List<Transform> roleButtonsValue in RoleButtons.Values)
+                {
+                    foreach (Transform transform in roleButtonsValue)
+                    {
+                        if (transform && transform.gameObject)
+                            Object.Destroy(transform.gameObject);
+                    }
+                }
+
+                RoleButtons = null;
+            }
+
+            if (RoleSelectButtons != null)
+            {
+                foreach (SpriteRenderer spriteRenderer in RoleSelectButtons.Values)
+                {
+                    if (spriteRenderer && spriteRenderer.gameObject)
+                        Object.Destroy(spriteRenderer.gameObject);
+                }
+
+                RoleSelectButtons = null;
+            }
+
+            if (PageButtons != null)
+            {
+                foreach (SpriteRenderer spriteRenderer in PageButtons)
+                {
+                    if (spriteRenderer && spriteRenderer.gameObject)
+                        Object.Destroy(spriteRenderer.gameObject);
+                }
+
+                PageButtons = null;
+            }
         }
     }
 
