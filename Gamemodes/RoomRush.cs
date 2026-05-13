@@ -36,7 +36,7 @@ public static class RoomRush
     private static HashSet<byte> DonePlayers = [];
 
     private static bool GameGoing;
-    private static DateTime GameStartDateTime;
+    public static DateTime GameStartDateTime;
 
     private static RandomSpawn.SpawnMap Map;
 

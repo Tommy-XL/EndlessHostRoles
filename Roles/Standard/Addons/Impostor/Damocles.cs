@@ -96,16 +96,6 @@ public class Damocles : IAddon
         MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SyncDamoclesTimer, SendOption.Reliable);
         writer.Write(playerId);
         writer.Write(Timer[playerId]);
-        writer.Write(LastUpdate[playerId].ToString());
-        List<int> pev = PreviouslyEnteredVents.GetValueOrDefault(playerId, []);
-        writer.Write(pev.Count);
-
-        if (pev.Count > 0)
-        {
-            foreach (int vent in pev)
-                writer.Write(vent);
-        }
-
         AmongUsClient.Instance.FinishRpcImmediately(writer);
     }
 
@@ -113,14 +103,6 @@ public class Damocles : IAddon
     {
         byte playerId = reader.ReadByte();
         Timer[playerId] = reader.ReadInt32();
-        LastUpdate[playerId] = long.Parse(reader.ReadString());
-        int elements = reader.ReadInt32();
-
-        if (elements > 0)
-        {
-            for (var i = 0; i < elements; i++)
-                PreviouslyEnteredVents[playerId].Add(reader.ReadInt32());
-        }
     }
 
     public static void OnMurder(byte id)

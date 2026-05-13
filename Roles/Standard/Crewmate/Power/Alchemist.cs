@@ -117,6 +117,8 @@ public class Alchemist : RoleBase
 
     public override void OnTaskComplete(PlayerControl pc, int completedTaskCount, int totalTaskCount)
     {
+        if (!pc.IsAlive()) return;
+        
         PotionID = (byte)IRandom.Instance.Next(1, 8);
         SendRPCData();
 
@@ -251,7 +253,7 @@ public class Alchemist : RoleBase
         InvisTimer = new CountdownTimer(invisDuration, () =>
         {
             InvisTimer = null;
-            if (pc == null || !pc.IsAlive()) return;
+            if (!pc || !pc.IsAlive()) return;
             Main.EnumeratePlayerControls().Without(pc).Do(x => instance.RpcExitVentDesync(ventId, x));
             pc.Notify(GetString("SwooperInvisStateOut"));
         }, onTick: pc.IsModdedClient() ? null : () => pc.Notify(string.Format(GetString("SwooperInvisStateCountdown"), (int)Math.Ceiling(InvisTimer.Remaining.TotalSeconds)), overrideAll: true), onCanceled: () => InvisTimer = null);
@@ -309,7 +311,7 @@ public class Alchemist : RoleBase
 
     public override void GetProgressText(byte playerId, bool comms, StringBuilder resultText)
     {
-        if (Utils.GetPlayerById(playerId) == null || !GameStates.IsInTask || playerId.IsPlayerModdedClient())
+        if (!GameStates.IsInTask || playerId.IsPlayerModdedClient())
         {
             base.GetProgressText(playerId, comms, resultText);
             return;

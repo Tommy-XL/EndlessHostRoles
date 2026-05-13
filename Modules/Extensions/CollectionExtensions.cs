@@ -504,16 +504,6 @@ public static class CollectionExtensions
     {
         return playerIds.Select(Utils.GetPlayer).Where(x => x);
     }
-
-    /// <summary>
-    ///     Converts a list of player IDs to a list of <see cref="PlayerControl" /> instances
-    /// </summary>
-    /// <param name="playerIds"></param>
-    /// <returns></returns>
-    public static List<PlayerControl> ToValidPlayers(this List<byte> playerIds)
-    {
-        return playerIds.ConvertAll(Utils.GetPlayer).FindAll(x => x);
-    }
     
     #endregion
     

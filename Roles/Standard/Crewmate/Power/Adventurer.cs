@@ -196,11 +196,11 @@ internal class Adventurer : RoleBase
 
                 switch (ActiveWeapons[0])
                 {
-                    case Weapon.Gun when target != null:
+                    case Weapon.Gun when target:
                         pc.RpcCheckAndMurder(target);
                         RemoveAndNotify();
                         break;
-                    case Weapon.Shield when target != null:
+                    case Weapon.Shield when target:
                         ShieldedPlayers.Add(target.PlayerId);
                         RemoveAndNotify();
                         break;
@@ -287,7 +287,7 @@ internal class Adventurer : RoleBase
             return;
         }
 
-        if (LastRandomResourceTimeStamp + 20 <= now && pc.PlayerId != AdventurerPC.PlayerId && IRandom.Instance.Next(50) == 0)
+        if (LastRandomResourceTimeStamp + 20 <= now && pc.PlayerId != AdventurerPC.PlayerId && IRandom.Instance.Next(500) == 0)
         {
             if (ResourceLocations.TryGetValue(Resource.Random, out Vector2 location))
             {
@@ -328,10 +328,9 @@ internal class Adventurer : RoleBase
                     HideObject(Resource.Grouping);
                 }
 
-                Vector2 pos = pc.Pos();
-                LocateArrow.Add(AdventurerPC.PlayerId, pos);
-                ResourceLocations[Resource.Grouping] = pos;
-                _ = new AdventurerItem(pos, Resource.Grouping, [AdventurerPC.PlayerId]);
+                LocateArrow.Add(AdventurerPC.PlayerId, pcPos);
+                ResourceLocations[Resource.Grouping] = pcPos;
+                _ = new AdventurerItem(pcPos, Resource.Grouping, [AdventurerPC.PlayerId]);
                 LastGroupingResourceTimeStamp = now;
                 Utils.NotifyRoles(SpecifySeer: AdventurerPC, SpecifyTarget: AdventurerPC);
             }

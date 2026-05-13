@@ -85,18 +85,13 @@ public abstract class CustomSabotage
 
     public static void UpdateAll()
     {
-        int sabotageCount = Instances.Count;
-        for (int sabotageId = 0; sabotageId < sabotageCount; sabotageId++)
+        for (int index = Instances.Count - 1; index >= 0; index--)
         {
-            try 
-            {
-                CustomSabotage sabotage = Instances[sabotageId];
-                sabotage.Update(); 
-            }
+            try { Instances[index].Update(); }
             catch (Exception e) { Utils.ThrowException(e); }
         }
 
-        if (sabotageCount > 0)
+        if (Instances.Count > 0)
         {
             SabotageSystemType sabotageSystemType = ShipStatus.Instance.Systems[SystemTypes.Sabotage].CastFast<SabotageSystemType>();
             sabotageSystemType.Timer = SabotageSystemTypeUpdateSystemPatch.IsCooldownModificationEnabled

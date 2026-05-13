@@ -36,9 +36,9 @@ public static class GuessManager
         return Main.EnumeratePlayerControls().Aggregate(GetString("PlayerIdList"), (current, pc) => current + $"\n{pc.PlayerId.ToString()} → {pc.GetRealName()}");
     }
 
-    public static bool CheckCommand(ref string msg, string command, bool exact, out bool spamRequired)
+    public static bool CheckCommand(ref string msg, string command, bool exact)
     {
-        Utils.CheckServerCommand(ref msg, out spamRequired);
+        Utils.CheckServerCommand(ref msg, out _);
         
         string[] comList = command.Split('|');
 
@@ -61,7 +61,7 @@ public static class GuessManager
         return false;
     }
 
-    public static bool GuesserMsg(PlayerControl pc, string msg, bool isUI = false, bool ssMenu = false)
+    public static bool GuesserMsg(PlayerControl pc, string msg, bool isUI = false)
     {
         if (!AmongUsClient.Instance.AmHost) return false;
         if (!GameStates.IsMeeting || MeetingHud.Instance.state is MeetingHud.VoteStates.Results or MeetingHud.VoteStates.Proceeding || !pc) return false;
@@ -72,8 +72,8 @@ public static class GuessManager
         int operate; // 1: ID, 2: Guess
         msg = msg.ToLower().TrimStart().TrimEnd();
 
-        if (CheckCommand(ref msg, "id|guesslist|gl编号|玩家编号|玩家id|id列表|玩家列表|列表|所有id|全部id", true, out bool spamRequired)) operate = 1;
-        else if (CheckCommand(ref msg, "shoot|guess|bet|st|bt|猜|赌", false, out spamRequired)) operate = 2;
+        if (CheckCommand(ref msg, "id|guesslist|gl编号|玩家编号|玩家id|id列表|玩家列表|列表|所有id|全部id", true)) operate = 1;
+        else if (CheckCommand(ref msg, "shoot|guess|bet|st|bt|猜|赌", false)) operate = 2;
         else return false;
 
         Logger.Msg(msg, "Msg Guesser");
@@ -118,13 +118,6 @@ public static class GuessManager
                 }
 
                 SkipCheck:
-
-                if (!isUI && !ssMenu && spamRequired && (pc.GetCustomRole() is CustomRoles.Decryptor or CustomRoles.NecroGuesser ||
-                     pc.Is(CustomRoles.NiceGuesser) ||
-                     pc.Is(CustomRoles.EvilGuesser) ||
-                     pc.Is(CustomRoles.Doomsayer) ||
-                     pc.Is(CustomRoles.Guesser) || Options.GuesserMode.GetBool()))
-                    Utils.SendMessage("\n", pc.PlayerId, GetString("NoSpamAnymoreUseCmd"));
 
                 if (!MsgToPlayerAndRole(msg, out byte targetId, out CustomRoles role, out string error))
                 {
@@ -325,6 +318,7 @@ public static class GuessManager
                         case CustomRoles.Ankylosaurus:
                             ShowMessage("GuessAnkylosaurus");
                             return true;
+                        case CustomRoles.Tree:
                         case CustomRoles.Car:
                         case CustomRoles.DonutDelivery when DonutDelivery.IsUnguessable(pc, target):
                         case CustomRoles.Shifter:
@@ -1195,35 +1189,47 @@ public static class GuessManager
         [SuppressMessage("ReSharper", "UnusedMember.Local")]
         public static void Postfix()
         {
-            if (TextTemplate) Object.Destroy(TextTemplate.gameObject);
-            if (GuesserUI) Object.Destroy(GuesserUI);
-
-            foreach (List<Transform> roleButtonsValue in RoleButtons.Values)
-            {
-                foreach (Transform transform in roleButtonsValue)
-                {
-                    if (transform?.gameObject)
-                        Object.Destroy(transform.gameObject);
-                }
-            }
-
-            foreach (SpriteRenderer spriteRenderer in RoleSelectButtons.Values)
-            {
-                if (spriteRenderer?.gameObject)
-                    Object.Destroy(spriteRenderer.gameObject);
-            }
-
-            foreach (SpriteRenderer spriteRenderer in PageButtons)
-            {
-                if (spriteRenderer?.gameObject)
-                    Object.Destroy(spriteRenderer.gameObject);
-            }
-
+            if (TextTemplate && TextTemplate.gameObject) Object.Destroy(TextTemplate.gameObject);
             TextTemplate = null;
+
+            if (GuesserUI) Object.Destroy(GuesserUI);
             GuesserUI = null;
-            RoleButtons.Clear();
-            RoleSelectButtons.Clear();
-            PageButtons.Clear();
+
+            if (RoleButtons != null)
+            {
+                foreach (List<Transform> roleButtonsValue in RoleButtons.Values)
+                {
+                    foreach (Transform transform in roleButtonsValue)
+                    {
+                        if (transform && transform.gameObject)
+                            Object.Destroy(transform.gameObject);
+                    }
+                }
+
+                RoleButtons = null;
+            }
+
+            if (RoleSelectButtons != null)
+            {
+                foreach (SpriteRenderer spriteRenderer in RoleSelectButtons.Values)
+                {
+                    if (spriteRenderer && spriteRenderer.gameObject)
+                        Object.Destroy(spriteRenderer.gameObject);
+                }
+
+                RoleSelectButtons = null;
+            }
+
+            if (PageButtons != null)
+            {
+                foreach (SpriteRenderer spriteRenderer in PageButtons)
+                {
+                    if (spriteRenderer && spriteRenderer.gameObject)
+                        Object.Destroy(spriteRenderer.gameObject);
+                }
+
+                PageButtons = null;
+            }
         }
     }
 
@@ -1343,7 +1349,7 @@ public static class GuessManager
                             SelectedRole = Enum.Parse<CustomRoles>(display, true);
                         }
 
-                        GuesserMsg(guesserId.GetPlayer(), $"/bt {Target.PlayerId} {GetString(SelectedRole.ToString())}", ssMenu: true);
+                        GuesserMsg(guesserId.GetPlayer(), $"/bt {Target.PlayerId} {GetString(SelectedRole.ToString())}");
                         Reset();
                         break;
                     }
@@ -1411,8 +1417,6 @@ public static class GuessManager
                 int textIndex = 0;
 
                 int messages = 0;
-                int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
-                
                 var skipped = false;
                 PlayerControl guesser = guesserId.GetPlayer();
                 MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
@@ -1441,7 +1445,7 @@ public static class GuessManager
                     if (textIndex % 3 == 0) sb.AppendLine();
                     else sb.Append(' ');
 
-                    if (writer.Length > 500 || messages >= packingLimit)
+                    if (writer.Length > 500 || messages >= AmongUsClient.Instance.GetMaxMessagePackingLimit())
                     {
                         messages = 0;
                         writer.EndMessage();

@@ -349,29 +349,37 @@ public class Magician : RoleBase
 
         if (Bombs.Count > 0)
         {
-            foreach (KeyValuePair<Vector2, long> bomb in Bombs.Where(bomb => bomb.Value + BombDelay.GetInt() < now).ToArray())
+            List<Vector2> toRemove = null;
+
+            foreach (KeyValuePair<Vector2, long> bomb in Bombs)
             {
-                foreach (PlayerControl tg in FastVector2.GetPlayersInRange(bomb.Key, BombRadius.GetFloat()))
+                if (bomb.Value + BombDelay.GetInt() < now)
                 {
-                    if (tg.PlayerId == pc.PlayerId)
+                    foreach (PlayerControl tg in FastVector2.GetPlayersInRange(bomb.Key, BombRadius.GetFloat()))
                     {
-                        LateTask.New(() =>
+                        if (tg.PlayerId == pc.PlayerId)
                         {
-                            if (!GameStates.IsEnded) pc.Suicide(PlayerState.DeathReason.Bombed);
-                        }, 0.5f, "Magician Bomb Suicide");
-                        continue;
+                            LateTask.New(() =>
+                            {
+                                if (!GameStates.IsEnded)
+                                    pc.Suicide(PlayerState.DeathReason.Bombed);
+                            }, 0.5f, "Magician Bomb Suicide");
+                            continue;
+                        }
+
+                        tg.Suicide(PlayerState.DeathReason.Bombed, pc);
                     }
 
-                    tg.Suicide(PlayerState.DeathReason.Bombed, pc);
+                    toRemove ??= [];
+                    toRemove.Add(bomb.Key);
+                    pc.Notify(GetString("MagicianBombExploded"));
                 }
-
-                Bombs.Remove(bomb.Key);
-                pc.Notify(GetString("MagicianBombExploded"));
             }
 
+            toRemove?.ForEach(x => Bombs.Remove(x));
+
             Notify.Clear();
-            long[] list = [.. Bombs.Values];
-            foreach (long x in list) Notify.AppendFormat(GetString("MagicianBombExlodesIn"), BombDelay.GetInt() - (now - x) + 1);
+            foreach (long x in Bombs.Values) Notify.AppendFormat(GetString("MagicianBombExlodesIn"), BombDelay.GetInt() - (now - x) + 1);
 
             pc.Notify(Notify.ToString());
         }

@@ -168,16 +168,21 @@ public class Druid : RoleBase
     {
         if (!GameStates.IsInTask || Triggers.Count <= 0 || PlayerIdList.Contains(pc.PlayerId)) return;
 
-        foreach (KeyValuePair<Vector2, string> trigger in Triggers.ToArray())
+        List<Vector2> toRemove = null;
+
+        foreach (KeyValuePair<Vector2, string> trigger in Triggers)
         {
             if (FastVector2.DistanceWithinRange(trigger.Key, pc.Pos(), 1.5f))
             {
-                Triggers.Remove(trigger.Key);
+                toRemove ??= [];
+                toRemove.Add(trigger.Key);
                 DruidPC.Notify(string.Format(GetString("DruidTriggerTriggered"), GetFormattedRoomName(trigger.Value), GetFormattedVectorText(trigger.Key)));
                 SendRPCAddTrigger(false, DruidPC.PlayerId, trigger.Key);
                 CustomNetObject.Get(TriggerIds[trigger.Key])?.Despawn();
             }
         }
+        
+        toRemove?.ForEach(x => Triggers.Remove(x));
     }
 
     public override string GetSuffix(PlayerControl seer, PlayerControl target, bool hud = false, bool meeting = false)

@@ -123,12 +123,12 @@ internal class Haunter : IGhostRole
 
         AllHauntedPlayers.UnionWith(targets);
 
-        var targetPcs = targets.ToValidPlayers();
+        var targetPcs = targets.ToValidPlayers().ToArray();
 
-        targetPcs.ForEach(x => x.Notify(Translator.GetString("HaunterRevealedYou"), 10f));
-        WarnedImps.ToValidPlayers().ForEach(x => x.Notify(Translator.GetString("HaunterFinishedTasks"), 10f));
+        targetPcs.Do(x => x.Notify(Translator.GetString("HaunterRevealedYou"), 10f));
+        WarnedImps.ToValidPlayers().Do(x => x.Notify(Translator.GetString("HaunterFinishedTasks"), 10f));
 
-        targetPcs.ForEach(x => Utils.NotifyRoles(SpecifyTarget: x));
+        targetPcs.Do(x => Utils.NotifyRoles(SpecifyTarget: x));
     }
 
     public void Update(PlayerControl pc)

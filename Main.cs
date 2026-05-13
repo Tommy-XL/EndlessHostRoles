@@ -264,16 +264,20 @@ public class Main : BasePlugin
     // Better use CachedAll/AlivePlayerControls, but in Coroutines (Async) functions need use "for (...)" loop
     public static IEnumerable<PlayerControl> EnumeratePlayerControls()
     {
-        foreach (var pc in PlayerControl.AllPlayerControls)
+        // foreach can throw System.InvalidOperationException: Collection was modified; enumeration operation may not execute.
+        // if the code waits frames between iterations, so the safest way is to use a for loop backwards
+        for (int index = PlayerControl.AllPlayerControls.Count - 1; index >= 0; index--)
         {
+            PlayerControl pc = PlayerControl.AllPlayerControls[index];
             if (!pc || pc.PlayerId >= 254) continue;
             yield return pc;
         }
     }
     public static IEnumerable<PlayerControl> EnumerateAlivePlayerControls()
     {
-        foreach (var pc in PlayerControl.AllPlayerControls)
+        for (int index = PlayerControl.AllPlayerControls.Count - 1; index >= 0; index--)
         {
+            PlayerControl pc = PlayerControl.AllPlayerControls[index];
             if (!pc.IsAliveWithConditions() || pc.PlayerId >= 254) continue;
             yield return pc;
         }

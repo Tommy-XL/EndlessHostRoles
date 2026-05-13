@@ -65,7 +65,8 @@ internal static class ControllerManagerUpdatePatch
 
             if (clientControlGUI)
             {
-                if (Input.GetKeyDown(KeyCode.Delete) ||
+                if ((!hudManagerExists || !HudManager.Instance.Chat || !HudManager.Instance.Chat.IsOpenOrOpening) 
+                    && Input.GetKeyDown(KeyCode.Delete) ||
                     KeysDown(OpenClientControlGUILeftKey) ||
                     KeysDown(OpenClientControlGUIRightKey))
                     clientControlGUI.IsOpen = !clientControlGUI.IsOpen;

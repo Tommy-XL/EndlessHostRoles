@@ -4700,7 +4700,6 @@
   "ND_LimitMaximumDisastersAtOnce": "Limit Maximum Active Disasters at Once",
   "ND_MaximumDisastersAtOnce": "Maximum Active Disasters at Once",
   "ND_WhenLimitIsReached": "When the Limit is Reached",
-  "ND_LimitReachedOptions.OnlySpawnInstantDisasters": "Only Spawn Instant Disasters",
   "ND_LimitReachedOptions.RemoveOldest": "Remove Oldest Disaster",
   "ND_LimitReachedOptions.RemoveRandom": "Remove Random Disaster",
   "ND_DisasterSpawnMode": "Disaster Spawn Mode",

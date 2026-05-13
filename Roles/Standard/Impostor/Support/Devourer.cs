@@ -107,10 +107,10 @@ public class Devourer : RoleBase
         return false;
     }
 
-    public static void OnDevourerDied(byte Devourer)
+    public static void OnDevourerDied(byte devourer)
     {
-        if (Main.PlayerStates[Devourer].Role is not Devourer { IsEnable: true } dv) return;
-        
+        if (Main.PlayerStates[devourer].Role is not Devourer { IsEnable: true } dv) return;
+
         var alivePlayers = Main.CachedAlivePlayerControls();
         foreach (byte player in dv.PlayerSkinsCosumed)
         {
@@ -127,7 +127,7 @@ public class Devourer : RoleBase
                         break;
                     }
                 }
-                if (pc == null) continue;
+                if (!pc) continue;
 
                 SetSkin(pc, OriginalPlayerSkins[player]);
             }

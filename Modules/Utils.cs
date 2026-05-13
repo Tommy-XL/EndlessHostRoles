@@ -2529,19 +2529,30 @@ public static class Utils
 
     public static PlayerControl GetPlayerById(int playerId, bool fast = true)
     {
-        if (playerId is > byte.MaxValue or < byte.MinValue) return null;
-
-        if (fast && GameStates.InGame && Main.PlayerStates.TryGetValue((byte)playerId, out PlayerState state) && state.Player) return state.Player;
-
-        if (playerId == PlayerControl.LocalPlayer.PlayerId) return PlayerControl.LocalPlayer;
-
-        foreach (var pc in PlayerControl.AllPlayerControls)
+        try
         {
-            if (pc.PlayerId == playerId)
-                return pc;
-        }
+            if (playerId == PlayerControl.LocalPlayer.PlayerId)
+                return PlayerControl.LocalPlayer;
 
-        return null;
+            byte id = (byte)playerId;
+
+            if (fast && GameStates.InGame &&
+                Main.PlayerStates.TryGetValue(id, out PlayerState state) &&
+                state.Player) { return state.Player; }
+
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.PlayerId == id)
+                    return pc;
+            }
+
+            return null;
+        }
+        catch (Exception e)
+        {
+            ThrowException(e);
+            return null;
+        }
     }
 
     public static void SetupLongRoleDescriptions()
@@ -3769,7 +3780,6 @@ public static class Utils
     public static void SendGameDataTo(int targetClientId)
     {
         int messages = 0;
-        int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
 
         MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
         writer.StartMessage(6);
@@ -3778,8 +3788,24 @@ public static class Utils
 
         foreach (NetworkedPlayerInfo playerinfo in GameData.Instance.AllPlayers)
         {
-            if (writer.Length > 500 || messages >= packingLimit)
-                FlushWriter();
+            if (writer.Length > 500 || messages >= AmongUsClient.Instance.GetMaxMessagePackingLimit())
+            {
+                writer.EndMessage();
+
+                var capturedWriter = writer;
+                DataFlagRateLimiter.Enqueue(() =>
+                {
+                    AmongUsClient.Instance.SendOrDisconnect(capturedWriter);
+                    capturedWriter.Recycle();
+                }, cleanup: capturedWriter.Recycle);
+
+                writer = MessageWriter.Get(SendOption.Reliable);
+                writer.StartMessage(6);
+                writer.Write(AmongUsClient.Instance.GameId);
+                writer.WritePacked(targetClientId);
+
+                messages = 0;
+            }
 
             writer.StartMessage(1);
             writer.WritePacked(playerinfo.NetId);
@@ -3789,30 +3815,13 @@ public static class Utils
             messages++;
         }
 
-        FlushWriter();
-        return;
+        writer.EndMessage();
 
-        void FlushWriter()
+        DataFlagRateLimiter.Enqueue(() =>
         {
-            writer.EndMessage();
-
-            // IMPORTANT: capture this specific writer instance
-            var capturedWriter = writer;
-
-            DataFlagRateLimiter.Enqueue(() =>
-            {
-                AmongUsClient.Instance.SendOrDisconnect(capturedWriter);
-                capturedWriter.Recycle();
-            }, calls: messages, cleanup: capturedWriter.Recycle);
-
-            // Create a NEW writer (do NOT reuse the old one)
-            writer = MessageWriter.Get(SendOption.Reliable);
-            writer.StartMessage(6);
-            writer.Write(AmongUsClient.Instance.GameId);
-            writer.WritePacked(targetClientId);
-
-            messages = 0;
-        }
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
+        }, cleanup: writer.Recycle);
     }
 
     public static string GetGameStateData(bool clairvoyant = false)
@@ -4839,34 +4848,47 @@ public static class Utils
                     }
                 }
 
-                DataFlagRateLimiter.Enqueue(() =>
+                int messages = 0;
+
+                MessageWriter packedWriter = MessageWriter.Get(SendOption.Reliable);
+                packedWriter.StartMessage(26);
+                packedWriter.WritePacked(AmongUsClient.Instance.GameId);
+
+                foreach (PlayerControl pc in players)
                 {
-                    int messages = 0;
-                    int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
-
-                    MessageWriter packedWriter = MessageWriter.Get(SendOption.Reliable);
-                    packedWriter.StartMessage(26);
-                    packedWriter.WritePacked(AmongUsClient.Instance.GameId);
-
-                    foreach (PlayerControl pc in players)
+                    if (packedWriter.Length > 500 || messages >= AmongUsClient.Instance.GetMaxMessagePackingLimit())
                     {
-                        if (packedWriter.Length > 500 || messages >= packingLimit)
+                        packedWriter.EndMessage();
+                        
+                        var capturedWriter = packedWriter;
+                        DataFlagRateLimiter.Enqueue(() =>
                         {
-                            packedWriter.EndMessage();
-                            AmongUsClient.Instance.SendOrDisconnect(packedWriter);
-                            packedWriter.Clear(SendOption.Reliable);
-                            packedWriter.StartMessage(26);
-                            packedWriter.WritePacked(AmongUsClient.Instance.GameId);
-                        }
+                            AmongUsClient.Instance.SendOrDisconnect(capturedWriter);
+                            capturedWriter.Recycle();
+                        }, cleanup: capturedWriter.Recycle);
 
-                        pc.SetChatVisible(visible, packedWriter);
-                        messages++;
+                        messages = 0;
+                        packedWriter = MessageWriter.Get(SendOption.Reliable);
+                        packedWriter.StartMessage(26);
+                        packedWriter.WritePacked(AmongUsClient.Instance.GameId);
                     }
 
-                    packedWriter.EndMessage();
+                    if (pc.SetChatVisible(visible, packedWriter))
+                        messages++;
+                }
+
+                if (messages == 0)
+                {
+                    packedWriter.Recycle();
+                    return;
+                }
+
+                packedWriter.EndMessage();
+                DataFlagRateLimiter.Enqueue(() =>
+                {
                     AmongUsClient.Instance.SendOrDisconnect(packedWriter);
                     packedWriter.Recycle();
-                }, calls: 3); // WAITING FOR THE SLOTHS TO VERIFY THIS (3 or 3 * players.Count)
+                }, cleanup: packedWriter.Recycle);
                 
                 return;
             }
@@ -5116,7 +5138,7 @@ public static class Utils
             Object.Destroy(playerControl.gameObject);
             sender.EndMessage();
             sender.SendMessage();
-        }, calls: 4);
+        });
     }
     
     public static MethodBase GetStateMachineMoveNext<T>(string methodName)

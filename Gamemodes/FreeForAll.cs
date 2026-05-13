@@ -134,7 +134,7 @@ internal static class FreeForAll
         FFAShieldedList = [];
 
         KillCount = [];
-        RoundTime = FFAGameTime.GetInt() + 8;
+        RoundTime = FFAGameTime.GetInt() - 10;
         Utils.SendRPC(CustomRPC.FFASync, 1, RoundTime);
 
         PlayerTeams = [];
@@ -375,7 +375,7 @@ internal static class FreeForAll
             if (!Main.IntroDestroyed || !GameStates.IsInTask || ExileController.Instance || Options.CurrentGameMode != CustomGameMode.FFA || !AmongUsClient.Instance.AmHost) return;
 
             long now = Utils.TimeStamp;
-            if (LastFixedUpdate == now) return;
+            if (IntroCutsceneDestroyPatch.IntroDestroyTS + 10 > now || LastFixedUpdate == now) return;
             LastFixedUpdate = now;
 
             RoundTime--;

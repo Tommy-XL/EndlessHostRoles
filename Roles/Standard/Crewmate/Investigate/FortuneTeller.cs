@@ -80,7 +80,8 @@ public class FortuneTeller : RoleBase
 
             (List<CustomRoles> RoleList, PlayerControl Player)[] roleList = Main.CustomRoleValues
                 .Where(x => !x.IsVanilla() && !x.IsAdditionRole() && x is not CustomRoles.GM and not CustomRoles.Convict and not CustomRoles.NotAssigned && !x.IsForOtherGameMode() && !CustomRoleSelector.RoleResult.ContainsValue(x))
-                .OrderBy(x => x.IsEnable() ? IRandom.Instance.Next(10) : IRandom.Instance.Next(10, 100))
+                .Shuffle()
+                .OrderByDescending(x => x.IsEnable())
                 .Take(rolesNeeded)
                 .Chunk(RolesPerCategory - 1)
                 .Zip(players, (array, player) => (RoleList: array.ToList(), Player: player))

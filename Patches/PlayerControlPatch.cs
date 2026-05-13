@@ -1707,9 +1707,9 @@ internal static class FixedUpdatePatch
 
             if (!isLobby)
             {
-                if (player.Is(CustomRoles.Spurt) && !Mathf.Approximately(Main.AllPlayerSpeed[playerId], Spurt.StartingSpeed[playerId]) && !inTask && !GameStates.IsMeeting) // fix ludicrous bug
+                if (player.Is(CustomRoles.Spurt) && !Mathf.Approximately(Main.AllPlayerSpeed[playerId], Main.RealOptionsData.GetFloat(FloatOptionNames.PlayerSpeedMod)) && !inTask && !GameStates.IsMeeting) // fix ludicrous bug
                 {
-                    Main.AllPlayerSpeed[playerId] = Spurt.StartingSpeed[playerId];
+                    Main.AllPlayerSpeed[playerId] = Main.RealOptionsData.GetFloat(FloatOptionNames.PlayerSpeedMod);
                     player.MarkDirtySettings();
                 }
 

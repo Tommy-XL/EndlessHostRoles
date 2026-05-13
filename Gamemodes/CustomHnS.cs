@@ -552,23 +552,24 @@ internal static class CustomHnS
 
             try
             {
-                var validIds = new HashSet<byte>();
-                
-                foreach (var pc in Main.CachedAllPlayerControls())
-                    validIds.Add(pc.PlayerId);
-
-                var toRemove = new List<byte>();
+                List<byte> toRemove = null;
 
                 foreach (var id in PlayerRoles.Keys)
                 {
-                    if (!validIds.Contains(id))
+                    if (!id.GetPlayer())
+                    {
+                        toRemove ??= [];
                         toRemove.Add(id);
+                    }
                 }
 
-                foreach (var id in toRemove)
+                if (toRemove != null)
                 {
-                    PlayerRoles.Remove(id);
-                    Utils.SendRPC(CustomRPC.HNSSync, 2, id);
+                    foreach (var id in toRemove)
+                    {
+                        PlayerRoles.Remove(id);
+                        Utils.SendRPC(CustomRPC.HNSSync, 2, id);
+                    }
                 }
             }
             catch { }

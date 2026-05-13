@@ -109,7 +109,7 @@ public class Lightning : RoleBase
 
     public static bool CheckLightningMurder(PlayerControl killer, PlayerControl target, bool force = false)
     {
-        if (killer == null || target == null || (!killer.Is(CustomRoles.Lightning) && !force)) return false;
+        if (!killer.Is(CustomRoles.Lightning) && !force) return false;
 
         if (IsGhost(target)) return false;
 
@@ -197,7 +197,7 @@ public class Lightning : RoleBase
         foreach (byte ghost in GhostPlayer)
         {
             PlayerControl gs = Utils.GetPlayerById(ghost);
-            if (gs == null) continue;
+            if (!gs) continue;
 
             CheckForEndVotingPatch.TryAddAfterMeetingDeathPlayers(PlayerState.DeathReason.Quantization, gs.PlayerId);
             gs.SetRealKiller(RealKiller[gs.PlayerId]);

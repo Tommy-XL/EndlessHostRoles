@@ -39,7 +39,7 @@ public class RoomRusher : RoleBase
     public override void SetupCustomOption()
     {
         StartSetup(645100)
-            .AutoSetupOption(ref GlobalTimeAddition, 4, new IntegerValueRule(0, 15, 1), OptionFormat.Seconds, overrideName: "RR_GlobalTimeAddition")
+            .AutoSetupOption(ref GlobalTimeAddition, 6, new IntegerValueRule(0, 15, 1), OptionFormat.Seconds, overrideName: "RR_GlobalTimeAddition")
             .AutoSetupOption(ref MaxVents, 1, new IntegerValueRule(0, 30, 1))
             .AutoSetupOption(ref RoomNameDisplay, true, overrideName: "RR_DisplayRoomName")
             .AutoSetupOption(ref Arrow, false, overrideName: "RR_DisplayArrowToRoom")
@@ -116,7 +116,16 @@ public class RoomRusher : RoleBase
         };
 
         if (involvesDecontamination)
-            time += 2;
+        {
+            int decontaminationTime = Options.ChangeDecontaminationTime.GetBool()
+                ? map == MapNames.Polus
+                    ? Options.DecontaminationTimeOnPolus.GetInt() + Options.DecontaminationDoorOpenTimeOnPolus.GetInt()
+                    : Options.DecontaminationTimeOnMiraHQ.GetInt() + Options.DecontaminationDoorOpenTimeOnMiraHQ.GetInt()
+                : 6;
+
+            if (SubmergedCompatibility.IsSubmerged()) decontaminationTime = 6;
+            time += decontaminationTime;
+        }
 
         switch (map)
         {
@@ -132,7 +141,8 @@ public class RoomRusher : RoleBase
 
         time += GlobalTimeAddition.GetInt();
         if (time < 6) time = 6;
-        
+
+        TimeLeft = time;
         Logger.Info($"Goal = from: {Translator.GetString(previous.ToString())} ({previous}), to: {Translator.GetString(RoomGoal.ToString())} ({RoomGoal}) - Time: {TimeLeft}  ({map})", "Room Rusher");
         LocateArrow.RemoveAllTarget(RoomRusherId);
         LocateArrow.Add(RoomRusherId, goalPos);

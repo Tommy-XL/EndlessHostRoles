@@ -9,7 +9,6 @@ namespace EHR;
 public static class NameNotifyManager
 {
     public static readonly Dictionary<byte, Dictionary<string, long>> Notifies = [];
-    private static readonly List<string> ToRemove = [];
     private static readonly List<KeyValuePair<string, long>> NameList = [];
     private static readonly Comparison<KeyValuePair<string, long>> CompareByValue = static (a, b) => a.Value.CompareTo(b.Value);
     private static readonly StringBuilder Sb = new();
@@ -74,27 +73,24 @@ public static class NameNotifyManager
             byte id = pair.Key;
             var dict = pair.Value;
 
-            bool removedAny = false;
-            ToRemove.Clear();
-
+            List<string> toRemove = null;
             var innerEnumerator = dict.GetEnumerator();
+
             while (innerEnumerator.MoveNext())
             {
                 var innerCurrent = innerEnumerator.Current;
                 if (innerCurrent.Value <= now)
-                    ToRemove.Add(innerCurrent.Key);
+                {
+                    toRemove ??= [];
+                    toRemove.Add(innerCurrent.Key);
+                }
             }
 
-            if (ToRemove.Count > 0)
+            if (toRemove != null)
             {
-                for (int index = 0; index < ToRemove.Count; index++)
-                    dict.Remove(ToRemove[index]);
+                for (int index = 0; index < toRemove.Count; index++)
+                    dict.Remove(toRemove[index]);
 
-                removedAny = true;
-            }
-
-            if (removedAny)
-            {
                 PlayerControl pc = Utils.GetPlayerById(id);
                 if (pc.IsAlive()) Utils.NotifyRoles(SpecifySeer: pc, SpecifyTarget: pc);
             }

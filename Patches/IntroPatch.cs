@@ -340,7 +340,7 @@ internal static class SetUpRoleTextPatch
         {
             LateTask.New(() =>
             {
-                if (AmongUsClient.Instance.IsGameOver || GameStates.IsLobby || lp == null) return;
+                if (AmongUsClient.Instance.IsGameOver || GameStates.IsLobby || !lp) return;
                 lp.SetName(Main.AllPlayerNames[lp.PlayerId]);
             }, 1f, "Reset Name For Modded Client");
         }
@@ -1272,7 +1272,7 @@ internal static class IntroCutsceneDestroyPatch
 
             try
             {
-                System.Collections.Generic.List<PlayerControl> spectators = ChatCommands.Spectators.ToList().ToValidPlayers();
+                System.Collections.Generic.List<PlayerControl> spectators = ChatCommands.Spectators.ToValidPlayers().ToList();
                 if (Main.GM.Value) spectators.Add(PlayerControl.LocalPlayer);
 
                 spectators.ForEach(x =>
@@ -1373,6 +1373,9 @@ internal static class IntroCutsceneDestroyPatch
                     break;
                 case CustomGameMode.StopAndGo:
                     StopAndGo.RoundTimer = Stopwatch.StartNew();
+                    break;
+                case CustomGameMode.RoomRush:
+                    RoomRush.GameStartDateTime = DateTime.Now;
                     break;
             }
         }

@@ -84,6 +84,7 @@ internal class Asthmatic : IAddon
         if (Timers.Count == 0) return;
 
         ToRemove.Clear();
+
         foreach ((byte id, Counter counter) in Timers)
         {
             PlayerState state = Main.PlayerStates[id];
@@ -96,6 +97,7 @@ internal class Asthmatic : IAddon
 
             counter.Update();
         }
+
         if (ToRemove.Count == 0) return;
 
         foreach (byte id in ToRemove)

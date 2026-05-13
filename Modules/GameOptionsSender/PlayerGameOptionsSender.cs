@@ -6,6 +6,7 @@ using AmongUs.GameOptions;
 using EHR.Gamemodes;
 using EHR.Roles;
 using Hazel;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using InnerNet;
 using Mathf = UnityEngine.Mathf;
 
@@ -21,8 +22,6 @@ public sealed class PlayerGameOptionsSender(PlayerControl player) : GameOptionsS
         Main.RealOptionsData.Restore(new NormalGameOptionsV10(new UnityLogger().CastFast<ILogger>()).CastFast<IGameOptions>());
 
     protected override bool IsDirty { get; set; }
-
-    protected override int TargetClientId => player.OwnerId;
 
     public static void SetDirty(byte playerId)
     {
@@ -165,6 +164,31 @@ public sealed class PlayerGameOptionsSender(PlayerControl player) : GameOptionsS
         else
             yield return base.SendGameOptionsAsync();
     }
+    
+    protected override void SendOptionsArray(Il2CppStructArray<byte> optionArray, byte logicOptionsIndex)
+    {
+        if (PackedWriter == null) return;
+        
+        PackedWriterMessages++;
+        
+        PackedWriter.StartMessage(Tags.GameDataTo);
+        {
+            PackedWriter.Write(AmongUsClient.Instance.GameId);
+            PackedWriter.WritePacked(player.OwnerId);
+
+            PackedWriter.StartMessage(1);
+            {
+                PackedWriter.WritePacked(GameManager.Instance.NetId);
+                PackedWriter.StartMessage(logicOptionsIndex);
+                {
+                    PackedWriter.WriteBytesAndSize(optionArray);
+                }
+                PackedWriter.EndMessage();
+            }
+            PackedWriter.EndMessage();
+        }
+        PackedWriter.EndMessage();
+    }
 
     public static void RemoveSender(PlayerControl player)
     {
@@ -300,9 +324,9 @@ public sealed class PlayerGameOptionsSender(PlayerControl player) : GameOptionsS
             
                     foreach (CustomRoles subRole in state.SubRoles)
                     {
-                        if (subRole.IsGhostRole() && subRole != CustomRoles.EvilSpirit)
+                        if (subRole.IsGhostRole())
                         {
-                            AURoleOptions.GuardianAngelCooldown = GhostRolesManager.AssignedGhostRoles.First(x => x.Value.Role == subRole).Value.Instance.Cooldown;
+                            AURoleOptions.GuardianAngelCooldown = subRole == CustomRoles.EvilSpirit ? Spiritcaller.SpiritAbilityCooldown.GetFloat() : GhostRolesManager.AssignedGhostRoles.Values.First(x => x.Role == subRole).Instance.Cooldown;
                             continue;
                         }
 
