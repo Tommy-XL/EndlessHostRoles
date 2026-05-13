@@ -253,7 +253,7 @@ internal static class SoloPVP
     {
         int waitingTime = SoloPVP_ResurrectionWaitingTime.GetInt();
 
-        if (waitingTime <= 1)
+        if (waitingTime <= 2)
         {
             PlayerHP[target.PlayerId] = PlayerHPMax[target.PlayerId];
             LastHurt[target.PlayerId] = Utils.TimeStamp;

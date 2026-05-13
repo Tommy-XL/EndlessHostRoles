@@ -32,9 +32,10 @@ internal static class ControllerManagerUpdatePatch
         {
             if (ClientControlGUI.Instance)
             {
-                if (Input.GetKeyDown(KeyCode.Delete) ||
-                    KeysDown(KeyCode.LeftControl, KeyCode.BackQuote) ||
-                    KeysDown(KeyCode.RightControl, KeyCode.BackQuote))
+                if ((!HudManager.InstanceExists || !HudManager.Instance.Chat || !HudManager.Instance.Chat.IsOpenOrOpening) &&
+                    (Input.GetKeyDown(KeyCode.Delete) ||
+                     KeysDown(KeyCode.LeftControl, KeyCode.BackQuote) ||
+                     KeysDown(KeyCode.RightControl, KeyCode.BackQuote)))
                     ClientControlGUI.Instance.IsOpen = !ClientControlGUI.Instance.IsOpen;
                 
                 if (ClientControlGUI.Instance.IsOpen) return;

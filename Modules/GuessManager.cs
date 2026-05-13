@@ -36,9 +36,9 @@ public static class GuessManager
         return Main.EnumeratePlayerControls().Aggregate(GetString("PlayerIdList"), (current, pc) => current + $"\n{pc.PlayerId.ToString()} → {pc.GetRealName()}");
     }
 
-    public static bool CheckCommand(ref string msg, string command, bool exact, out bool spamRequired)
+    public static bool CheckCommand(ref string msg, string command, bool exact)
     {
-        Utils.CheckServerCommand(ref msg, out spamRequired);
+        Utils.CheckServerCommand(ref msg, out _);
         
         string[] comList = command.Split('|');
 
@@ -61,7 +61,7 @@ public static class GuessManager
         return false;
     }
 
-    public static bool GuesserMsg(PlayerControl pc, string msg, bool isUI = false, bool ssMenu = false)
+    public static bool GuesserMsg(PlayerControl pc, string msg, bool isUI = false)
     {
         if (!AmongUsClient.Instance.AmHost) return false;
         if (!GameStates.IsMeeting || MeetingHud.Instance.state is MeetingHud.VoteStates.Results or MeetingHud.VoteStates.Proceeding || !pc) return false;
@@ -72,8 +72,8 @@ public static class GuessManager
         int operate; // 1: ID, 2: Guess
         msg = msg.ToLower().TrimStart().TrimEnd();
 
-        if (CheckCommand(ref msg, "id|guesslist|gl编号|玩家编号|玩家id|id列表|玩家列表|列表|所有id|全部id", true, out bool spamRequired)) operate = 1;
-        else if (CheckCommand(ref msg, "shoot|guess|bet|st|bt|猜|赌", false, out spamRequired)) operate = 2;
+        if (CheckCommand(ref msg, "id|guesslist|gl编号|玩家编号|玩家id|id列表|玩家列表|列表|所有id|全部id", true)) operate = 1;
+        else if (CheckCommand(ref msg, "shoot|guess|bet|st|bt|猜|赌", false)) operate = 2;
         else return false;
 
         Logger.Msg(msg, "Msg Guesser");
@@ -118,13 +118,6 @@ public static class GuessManager
                 }
 
                 SkipCheck:
-
-                if (!isUI && !ssMenu && spamRequired && (pc.GetCustomRole() is CustomRoles.Decryptor or CustomRoles.NecroGuesser ||
-                     pc.Is(CustomRoles.NiceGuesser) ||
-                     pc.Is(CustomRoles.EvilGuesser) ||
-                     pc.Is(CustomRoles.Doomsayer) ||
-                     pc.Is(CustomRoles.Guesser) || Options.GuesserMode.GetBool()))
-                    Utils.SendMessage("\n", pc.PlayerId, GetString("NoSpamAnymoreUseCmd"));
 
                 if (!MsgToPlayerAndRole(msg, out byte targetId, out CustomRoles role, out string error))
                 {
@@ -325,6 +318,7 @@ public static class GuessManager
                         case CustomRoles.Ankylosaurus:
                             ShowMessage("GuessAnkylosaurus");
                             return true;
+                        case CustomRoles.Tree:
                         case CustomRoles.Car:
                         case CustomRoles.DonutDelivery when DonutDelivery.IsUnguessable(pc, target):
                         case CustomRoles.Shifter:
@@ -1355,7 +1349,7 @@ public static class GuessManager
                             SelectedRole = Enum.Parse<CustomRoles>(display, true);
                         }
 
-                        GuesserMsg(guesserId.GetPlayer(), $"/bt {Target.PlayerId} {GetString(SelectedRole.ToString())}", ssMenu: true);
+                        GuesserMsg(guesserId.GetPlayer(), $"/bt {Target.PlayerId} {GetString(SelectedRole.ToString())}");
                         Reset();
                         break;
                     }

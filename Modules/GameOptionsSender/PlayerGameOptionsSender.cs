@@ -324,9 +324,9 @@ public sealed class PlayerGameOptionsSender(PlayerControl player) : GameOptionsS
             
                     foreach (CustomRoles subRole in state.SubRoles)
                     {
-                        if (subRole.IsGhostRole() && subRole != CustomRoles.EvilSpirit)
+                        if (subRole.IsGhostRole())
                         {
-                            AURoleOptions.GuardianAngelCooldown = GhostRolesManager.AssignedGhostRoles.First(x => x.Value.Role == subRole).Value.Instance.Cooldown;
+                            AURoleOptions.GuardianAngelCooldown = subRole == CustomRoles.EvilSpirit ? Spiritcaller.SpiritAbilityCooldown.GetFloat() : GhostRolesManager.AssignedGhostRoles.Values.First(x => x.Role == subRole).Instance.Cooldown;
                             continue;
                         }
 

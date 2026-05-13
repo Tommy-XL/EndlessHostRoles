@@ -954,22 +954,3 @@ namespace EHR
         }
     }
 }
-
-// This method sometimes throws an exception, preventing further code from running
-[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RawSetName))]
-static class RawSetNameErrorFixPatch
-{
-    public static Exception Finalizer()
-    {
-        return null;
-    }
-}
-
-[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.SetName))]
-static class SetNameErrorFixPatch
-{
-    public static Exception Finalizer()
-    {
-        return null;
-    }
-}

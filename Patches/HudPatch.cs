@@ -693,24 +693,6 @@ internal static class SetHudActivePatch
     }
 }
 
-[HarmonyPatch(typeof(AbilityButton), nameof(AbilityButton.SetFromSettings))]
-static class AbilityButtonSetFromSettingsPatch
-{
-    public static Exception Finalizer()
-    {
-        return null;
-    }
-}
-
-[HarmonyPatch(typeof(ActionButton), nameof(ActionButton.SetEnabled))]
-static class ActionButtonSetEnabledPatch
-{
-    public static Exception Finalizer()
-    {
-        return null;
-    }
-}
-
 // From https://github.com/AU-Avengers/TOU-Mira/blob/main/TownOfUs/Patches/HudManagerPatches.cs
 [HarmonyPatch(typeof(HudManager), nameof(HudManager.Start))]
 [HarmonyPriority(Priority.Last)]

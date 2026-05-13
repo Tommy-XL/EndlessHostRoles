@@ -82,7 +82,7 @@ internal class Adventurer : RoleBase
 
     private static void HideObject(Resource resource)
     {
-        CustomNetObject.AllObjects.FirstOrDefault(x => x is AdventurerItem a && a.Resource == resource)?.Despawn();
+        CustomNetObject.AllObjects.Find(x => x is AdventurerItem a && a.Resource == resource)?.Despawn();
     }
 
     private static OptionItem CreateWeaponEnabledSetting(int id, Weapon weapon)
@@ -187,11 +187,11 @@ internal class Adventurer : RoleBase
 
                 switch (ActiveWeapons[0])
                 {
-                    case Weapon.Gun when target != null:
+                    case Weapon.Gun when target:
                         pc.RpcCheckAndMurder(target);
                         RemoveAndNotify();
                         break;
-                    case Weapon.Shield when target != null:
+                    case Weapon.Shield when target:
                         ShieldedPlayers.Add(target.PlayerId);
                         RemoveAndNotify();
                         break;
@@ -279,7 +279,7 @@ internal class Adventurer : RoleBase
             return;
         }
 
-        if (LastRandomResourceTimeStamp + 20 <= now && pc.PlayerId != AdventurerPC.PlayerId && IRandom.Instance.Next(50) == 0)
+        if (LastRandomResourceTimeStamp + 20 <= now && pc.PlayerId != AdventurerPC.PlayerId && IRandom.Instance.Next(500) == 0)
         {
             if (ResourceLocations.TryGetValue(Resource.Random, out Vector2 location))
             {
@@ -295,20 +295,24 @@ internal class Adventurer : RoleBase
             Utils.NotifyRoles(SpecifySeer: AdventurerPC, SpecifyTarget: AdventurerPC);
         }
 
-        if (LastGroupingResourceTimeStamp + 20 <= now && Main.EnumerateAlivePlayerControls().Count(x => x.PlayerId != pc.PlayerId && FastVector2.DistanceWithinRange(x.Pos(), pc.Pos(), 2f)) >= 2)
+        if (LastGroupingResourceTimeStamp + 20 <= now)
         {
-            if (ResourceLocations.TryGetValue(Resource.Grouping, out Vector2 location))
-            {
-                LocateArrow.Remove(AdventurerPC.PlayerId, location);
-                HideObject(Resource.Grouping);
-            }
-
             Vector2 pos = pc.Pos();
-            LocateArrow.Add(AdventurerPC.PlayerId, pos);
-            ResourceLocations[Resource.Grouping] = pos;
-            _ = new AdventurerItem(pos, Resource.Grouping, [AdventurerPC.PlayerId]);
-            LastGroupingResourceTimeStamp = now;
-            Utils.NotifyRoles(SpecifySeer: AdventurerPC, SpecifyTarget: AdventurerPC);
+
+            if (Main.EnumerateAlivePlayerControls().Count(x => x.PlayerId != pc.PlayerId && FastVector2.DistanceWithinRange(x.Pos(), pos, 2f)) >= 2)
+            {
+                if (ResourceLocations.TryGetValue(Resource.Grouping, out Vector2 location))
+                {
+                    LocateArrow.Remove(AdventurerPC.PlayerId, location);
+                    HideObject(Resource.Grouping);
+                }
+
+                LocateArrow.Add(AdventurerPC.PlayerId, pos);
+                ResourceLocations[Resource.Grouping] = pos;
+                _ = new AdventurerItem(pos, Resource.Grouping, [AdventurerPC.PlayerId]);
+                LastGroupingResourceTimeStamp = now;
+                Utils.NotifyRoles(SpecifySeer: AdventurerPC, SpecifyTarget: AdventurerPC);
+            }
         }
     }
 
