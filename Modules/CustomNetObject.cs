@@ -841,7 +841,7 @@ namespace EHR
         public void SpawnIfNotSpawned()
         {
             if (Spawned) return;
-            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark>\n<#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark>\n<mark=#00ff15>WW</mark><#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark>\n<mark=#00ff15>W</mark><#0000>WW</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark>\n<mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>WW</mark><#0000>W</color><mark=#00ff15>W</mark>\n<mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark><#0000>WW</color><mark=#00ff15>W", Position);
+            CreateNetObject("<line-height=67%><alpha=#00>█<#00ff15>█<alpha=#00>█<#00ff15>█<alpha=#00>█<#00ff15>█<br><alpha=#00>█<#00ff15>█<alpha=#00>█<#00ff15>█<alpha=#00>█<#00ff15>█<br><#00ff15>█<#00ff15>█<alpha=#00>█<#00ff15>█<alpha=#00>█<#00ff15>█<br><#00ff15>█<alpha=#00>█<alpha=#00>█<#00ff15>█<alpha=#00>█<#00ff15>█<br><#00ff15>█<alpha=#00>█<#00ff15>█<#00ff15>█<alpha=#00>█<#00ff15>█<br><#00ff15>█<alpha=#00>█<#00ff15>█<alpha=#00>█<alpha=#00>█<#00ff15>█", Position);
             Spawned = true;
         }
     }
