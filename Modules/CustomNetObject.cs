@@ -7,7 +7,6 @@ using AmongUs.InnerNet.GameDataMessages;
 using EHR.Gamemodes;
 using EHR.Modules;
 using EHR.Roles;
-using HarmonyLib;
 using Hazel;
 using InnerNet;
 using UnityEngine;
