@@ -518,7 +518,7 @@ namespace EHR
         public TornadoObject(Vector2 position, IEnumerable<byte> visibleList)
         {
             SpawnTimeStamp = Utils.TimeStamp;
-            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WW</color><mark=#bababa>WWWW</mark><#0000>WW\nW</color><mark=#bababa>WW</mark><mark=#8c8c8c>WW</mark><mark=#bababa>WW</mark><#0000>W</color>\n<mark=#bababa>WW</mark><mark=#8c8c8c>WWWW</mark><mark=#bababa>WW</mark>\n<mark=#bababa>W</mark><mark=#8c8c8c>WW</mark><mark=#636363>WW</mark><mark=#8c8c8c>WW</mark><mark=#bababa>W</mark>\n<mark=#bababa>W</mark><mark=#8c8c8c>WW</mark><mark=#636363>WW</mark><mark=#8c8c8c>WW</mark><mark=#bababa>W</mark>\n<mark=#bababa>WW</mark><mark=#8c8c8c>WWWW</mark><mark=#bababa>WW</mark>\n<#0000>W</color><mark=#bababa>WW</mark><mark=#8c8c8c>WW</mark><mark=#bababa>WW</mark><#0000>W\nWW</color><mark=#bababa>WWWW</mark><#0000>WW</color>", position);
+            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WW</color><mark=#bababa>WWWW</mark><#0000>WW\nW</color><mark=#bababa>WW</mark><mark=#8c8c8c>WW</mark><mark=#bababa>WW</mark><#0000>W</color>\n<mark=#bababa>WW</mark><mark=#8c8c8c>WWWW</mark><mark=#bababa>WW</mark>\n<mark=#bababa>W</mark><mark=#8c8c8c>WW</mark><mark=#636363>WW</mark><mark=#8c8c8c>WW</mark><mark=#bababa>W</mark>\n<mark=#bababa>W</mark><mark=#8c8c8c>WW</mark><mark=#636363>WW</mark><mark=#8c8c8c>WW</mark><mark=#bababa>W</mark>\n<mark=#bababa>WW</mark><mark=#8c8c8c>WWWW</mark><mark=#bababa>WW</mark>\n<#0000>W</color><mark=#bababa>WW</mark><mark=#8c8c8c>WW</mark><mark=#bababa>WW</mark><#0000>W\nWW</color><mark=#bababa>WWWW</mark><#0000>WW", position);
             LateTask.New(() => Hide(Main.EnumerateAlivePlayerControls().ExceptBy(visibleList, x => x.PlayerId)), 0.4f);
         }
 
@@ -553,7 +553,7 @@ namespace EHR
     {
         public PlayerDetector(Vector2 position, List<byte> visibleList, out int id)
         {
-            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WW</color><mark=#33e6b0>W</mark><#0000>WW</color><mark=#33e6b0>W</mark><#0000>WW\nW</color><mark=#33e6b0>W</mark><#0000>WWWW</color><mark=#33e6b0>W</mark><#0000>W</color>\n<mark=#33e6b0>W</mark><#0000>WW</color><mark=#33e6b0>WW</mark><#0000>WW</color><mark=#33e6b0>W</mark>\n<mark=#33e6b0>W</mark><#0000>W</color><mark=#33e6b0>W</mark><mark=#000>WW</mark><mark=#33e6b0>W</mark><#0000>W</color><mark=#33e6b0>W</mark>\n<mark=#33e6b0>W</mark><#0000>W</color><mark=#33e6b0>W</mark><mark=#000>WW</mark><mark=#33e6b0>W</mark><#0000>W</color><mark=#33e6b0>W</mark>\n<mark=#33e6b0>W</mark><#0000>WW</color><mark=#33e6b0>WW</mark><#0000>WW</color><mark=#33e6b0>W</mark>\n<#0000>W</color><mark=#33e6b0>W</mark><#0000>WWWW</color><mark=#33e6b0>W</mark><#0000>W\nWW</color><mark=#33e6b0>W</mark><#0000>WW</color><mark=#33e6b0>W</mark><#0000>WW</color>", position);
+            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WW</color><mark=#33e6b0>W</mark><#0000>WW</color><mark=#33e6b0>W</mark><#0000>WW\nW</color><mark=#33e6b0>W</mark><#0000>WWWW</color><mark=#33e6b0>W</mark><#0000>W</color>\n<mark=#33e6b0>W</mark><#0000>WW</color><mark=#33e6b0>WW</mark><#0000>WW</color><mark=#33e6b0>W</mark>\n<mark=#33e6b0>W</mark><#0000>W</color><mark=#33e6b0>W</mark><mark=#000000>WW</mark><mark=#33e6b0>W</mark><#0000>W</color><mark=#33e6b0>W</mark>\n<mark=#33e6b0>W</mark><#0000>W</color><mark=#33e6b0>W</mark><mark=#000000>WW</mark><mark=#33e6b0>W</mark><#0000>W</color><mark=#33e6b0>W</mark>\n<mark=#33e6b0>W</mark><#0000>WW</color><mark=#33e6b0>WW</mark><#0000>WW</color><mark=#33e6b0>W</mark>\n<#0000>W</color><mark=#33e6b0>W</mark><#0000>WWWW</color><mark=#33e6b0>W</mark><#0000>W\nWW</color><mark=#33e6b0>W</mark><#0000>WW</color><mark=#33e6b0>W</mark><#0000>WW", position);
             LateTask.New(() => Hide(Main.EnumerateAlivePlayerControls().ExceptBy(visibleList, x => x.PlayerId)), 0.4f);
             id = Id;
         }
@@ -576,7 +576,7 @@ namespace EHR
     {
         internal Toilet(Vector2 position, IEnumerable<PlayerControl> hideList)
         {
-            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>W</color><mark=#e6e6e6>WWWWWWWW</mark><#0000>W</color>\n<mark=#e6e6e6>W</mark><mark=#d3d4ce>WWWWWWWW</mark><mark=#e6e6e6>W</mark>\n<mark=#e6e6e6>W</mark><mark=#d3d4ce>WWWWWWWW</mark><mark=#e6e6e6>W</mark>\n<#0000>W</color><mark=#e6e6e6>W</mark><mark=#d3d4ce>WWWWWW</mark><mark=#e6e6e6>W</mark><#0000>W\nW</color><mark=#e6e6e6>WW</mark><mark=#d3d4ce>W</mark><mark=#dedede>WW</mark><mark=#d3d4ce>W</mark><mark=#e6e6e6>WW</mark><#0000>W\nW</color><mark=#bfbfbf>W</mark><mark=#454545>W</mark><mark=#333>WWWWWW</mark><mark=#bfbfbf>W</mark>\n<#0000>W</color><mark=#bfbfbf>WW</mark><mark=#454545>WWWWWW</mark><mark=#bfbfbf>W</mark>\n<#0000>WW</color><mark=#bfbfbf>WWWWWWWW</mark>\n<#0000>WWW</color><mark=#dedede>WWWW</mark><#0000>WWW\nWWWW</color><mark=#dedede>WW</mark><#0000>WWWW</color>", position);
+            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>W</color><mark=#e6e6e6>WWWWWWWW</mark><#0000>W</color>\n<mark=#e6e6e6>W</mark><mark=#d3d4ce>WWWWWWWW</mark><mark=#e6e6e6>W</mark>\n<mark=#e6e6e6>W</mark><mark=#d3d4ce>WWWWWWWW</mark><mark=#e6e6e6>W</mark>\n<#0000>W</color><mark=#e6e6e6>W</mark><mark=#d3d4ce>WWWWWW</mark><mark=#e6e6e6>W</mark><#0000>W\nW</color><mark=#e6e6e6>WW</mark><mark=#d3d4ce>W</mark><mark=#dedede>WW</mark><mark=#d3d4ce>W</mark><mark=#e6e6e6>WW</mark><#0000>W\nW</color><mark=#bfbfbf>W</mark><mark=#454545>W</mark><mark=#333333>WWWWWW</mark><mark=#bfbfbf>W</mark>\n<#0000>W</color><mark=#bfbfbf>WW</mark><mark=#454545>WWWWWW</mark><mark=#bfbfbf>W</mark>\n<#0000>WW</color><mark=#bfbfbf>WWWWWWWW</mark>\n<#0000>WWW</color><mark=#dedede>WWWW</mark><#0000>WWW\nWWWW</color><mark=#dedede>WW</mark><#0000>WWWW", position);
             LateTask.New(() => Hide(hideList), 0.4f);
         }
     }
@@ -585,7 +585,7 @@ namespace EHR
     {
         internal BlackHole(Vector2 position)
         {
-            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WW</color><mark=#000>WWWW</mark><#0000>WW\nW</color><mark=#000>WWWWWW</mark><#0000>W</color>\n<mark=#000>WWWWWWWW\nWWWWWWWW\nWWWWWWWW\nWWWWWWWW</mark>\n<#0000>W</color><mark=#000>WWWWWW</mark><#0000>W\nWW</color><mark=#000>WWWW</mark><#0000>WW</color>", position);
+            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WW</color><mark=#000000>WWWW</mark><#0000>WW\nW</color><mark=#000000>WWWWWW</mark><#0000>W</color>\n<mark=#000000>WWWWWWWW\nWWWWWWWW\nWWWWWWWW\nWWWWWWWW</mark>\n<#0000>W</color><mark=#000000>WWWWWW</mark><#0000>W\nWW</color><mark=#000000>WWWW</mark><#0000>WW", position);
         }
 
         public override void OnMeeting()
@@ -599,7 +599,7 @@ namespace EHR
     {
         public SprayedArea(Vector2 position, IEnumerable<byte> visibleList)
         {
-            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WW</color><mark=#ffd000>WW</mark><#0000>WW\nW</color><mark=#ffd000>WWWW</mark><#0000>W</color>\n<mark=#ffd000>WWWWWW</mark>\n<mark=#ffd000>WWWWWW</mark>\n<#0000>W</color><mark=#ffd000>WWWW</mark><#0000>W\nWW</color><mark=#ffd000>WW</mark><#0000>WW</color>", position);
+            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WW</color><mark=#ffd000>WW</mark><#0000>WW\nW</color><mark=#ffd000>WWWW</mark><#0000>W</color>\n<mark=#ffd000>WWWWWW</mark>\n<mark=#ffd000>WWWWWW</mark>\n<#0000>W</color><mark=#ffd000>WWWW</mark><#0000>W\nWW</color><mark=#ffd000>WW</mark><#0000>WW", position);
             LateTask.New(() => Hide(Main.EnumerateAlivePlayerControls().ExceptBy(visibleList, x => x.PlayerId)), 0.4f);
         }
 
@@ -613,7 +613,7 @@ namespace EHR
     {
         public CatcherTrap(Vector2 position, PlayerControl catcher)
         {
-            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WW</color><mark=#ccffda>WW</mark><#0000>WW\nW</color><mark=#ccffda>WWWW</mark><#0000>W</color>\n<mark=#ccffda>WWWWWW</mark>\n<mark=#ccffda>WWWWWW</mark>\n<#0000>W</color><mark=#ccffda>WWWW</mark><#0000>W\nWW</color><mark=#ccffda>WW</mark><#0000>WW</color>", position);
+            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WW</color><mark=#ccffda>WW</mark><#0000>WW\nW</color><mark=#ccffda>WWWW</mark><#0000>W</color>\n<mark=#ccffda>WWWWWW</mark>\n<mark=#ccffda>WWWWWW</mark>\n<#0000>W</color><mark=#ccffda>WWWW</mark><#0000>W\nWW</color><mark=#ccffda>WW</mark><#0000>WW", position);
             LateTask.New(() => Hide(Main.EnumerateAlivePlayerControls().Without(catcher)), 0.4f);
         }
 
@@ -627,7 +627,7 @@ namespace EHR
     {
         public YellowFlag(Vector2 position)
         {
-            CreateNetObject("<line-height=97%><cspace=0.16em><mark=#000>W</mark><mark=#ff0>WWW</mark><#0000>WW</color>\n<mark=#000>W</mark><mark=#ff0>WWWWW</mark>\n<mark=#000>W</mark><#0000>WW</color><mark=#ff0>WWW</mark>\n<mark=#000>W</mark><#0000>WWWWW</color>\n<mark=#000>W</mark><#0000>WWWWW</color>\n<mark=#000>W</mark><#0000>WWWWW</color>", position);
+            CreateNetObject("<line-height=97%><cspace=0.16em><mark=#000000>W</mark><mark=#ffff00>WWW</mark><#0000>WW</color>\n<mark=#000000>W</mark><mark=#ffff00>WWWWW</mark>\n<mark=#000000>W</mark><#0000>WW</color><mark=#ffff00>WWW</mark>\n<mark=#000000>W</mark><#0000>WWWWW</color>\n<mark=#000000>W</mark><#0000>WWWWW</color>\n<mark=#000000>W</mark><#0000>WWWWW", position);
         }
     }
 
@@ -635,7 +635,7 @@ namespace EHR
     {
         public BlueFlag(Vector2 position)
         {
-            CreateNetObject("<line-height=97%><cspace=0.16em><mark=#000>W</mark><mark=#00f>WWW</mark><#0000>WW</color>\n<mark=#000>W</mark><mark=#00f>WWWWW</mark>\n<mark=#000>W</mark><#0000>WW</color><mark=#00f>WWW</mark>\n<mark=#000>W</mark><#0000>WWWWW</color>\n<mark=#000>W</mark><#0000>WWWWW</color>\n<mark=#000>W</mark><#0000>WWWWW</color>", position);
+            CreateNetObject("<line-height=97%><cspace=0.16em><mark=#000000>W</mark><mark=#0000ff>WWW</mark><#0000>WW</color>\n<mark=#000000>W</mark><mark=#0000ff>WWWWW</mark>\n<mark=#000000>W</mark><#0000>WW</color><mark=#0000ff>WWW</mark>\n<mark=#000000>W</mark><#0000>WWWWW</color>\n<mark=#000000>W</mark><#0000>WWWWW</color>\n<mark=#000000>W</mark><#0000>WWWWW", position);
         }
     }
 
@@ -643,7 +643,7 @@ namespace EHR
     {
         public SoulObject(Vector2 position, PlayerControl whisperer)
         {
-            CreateNetObject("<size=80%><line-height=97%><cspace=0.16em><#0000>WW</color><mark=#fcfcfc>WWW</mark><#0000>W\nW</color><mark=#fcfcfc>WWWWW</mark>\n<mark=#fcfcfc>WWWW</mark><mark=#cfcfcf>WW</mark>\n<mark=#fcfcfc>WWWWWW</mark>\n<#0000>W</color><mark=#fcfcfc>WWWWW</mark>\n<#0000>W</color><mark=#fcfcfc>WWW</mark><#0000>W</color><mark=#fcfcfc>W</mark>", position);
+            CreateNetObject("<size=80%><line-height=97%><cspace=0.16em><#0000>WW</color><mark=#fcfcfc>WWW</mark><#0000>W\nW</color><mark=#fcfcfc>WWWWW</mark>\n<mark=#fcfcfc>WWWW</mark><mark=#cfcfcf>WW</mark>\n<mark=#fcfcfc>WWWWWW</mark>\n<#0000>W</color><mark=#fcfcfc>WWWWW</mark>\n<#0000>W</color><mark=#fcfcfc>WWW</mark><#0000>W</color><mark=#fcfcfc>W", position);
             LateTask.New(() => Hide(Main.EnumerateAlivePlayerControls().Without(whisperer)), 0.4f);
         }
     }
@@ -712,7 +712,7 @@ namespace EHR
 
         public Lightning(Vector2 position)
         {
-            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WWWWW</color><mark=#c6c7c3>W</mark>\n<#0000>W</color><mark=#c6c7c3>W</mark><#0000>WW</color><mark=#c6c7c3>W</mark><#0000>W</color>\n<mark=#c6c7c3>W</mark><#0000>W</color><mark=#fffb00>WW</mark><#0000>WW\nWW</color><mark=#fffb00>WW</mark><#0000>W</color><mark=#c6c7c3>W</mark>\n<mark=#c6c7c3>W</mark><#0000>WWWWW\nWW</color><mark=#c6c7c3>WW</mark><#0000>WW</color>", position);
+            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WWWWW</color><mark=#c6c7c3>W</mark>\n<#0000>W</color><mark=#c6c7c3>W</mark><#0000>WW</color><mark=#c6c7c3>W</mark><#0000>W</color>\n<mark=#c6c7c3>W</mark><#0000>W</color><mark=#fffb00>WW</mark><#0000>WW\nWW</color><mark=#fffb00>WW</mark><#0000>W</color><mark=#c6c7c3>W</mark>\n<mark=#c6c7c3>W</mark><#0000>WWWWW\nWW</color><mark=#c6c7c3>WW</mark><#0000>WW", position);
         }
 
         protected override void OnFixedUpdate()
@@ -726,7 +726,7 @@ namespace EHR
     {
         public BlueBed(Vector2 position)
         {
-            BaseSprite = "<size=70%><line-height=97%><cspace=0.16em><mark=#c7deff>WW</mark><mark=#00aeff>WWWW</mark>\n<mark=#c7deff>WW</mark><mark=#00aeff>WWWW</mark>\n<mark=#c7deff>WW</mark><mark=#00aeff>WWWW</mark>\n<mark=#82531a>W</mark><#0000>WWWW</color><mark=#82531a>W</mark>";
+            BaseSprite = "<size=70%><line-height=97%><cspace=0.16em><mark=#c7deff>WW</mark><mark=#00aeff>WWWW</mark>\n<mark=#c7deff>WW</mark><mark=#00aeff>WWWW</mark>\n<mark=#c7deff>WW</mark><mark=#00aeff>WWWW</mark>\n<mark=#82531a>W</mark><#0000>WWWW</color><mark=#82531a>W";
             UpdateStatus(false);
             CreateNetObject(GetSprite(), position);
         }
@@ -736,7 +736,7 @@ namespace EHR
     {
         public GreenBed(Vector2 position)
         {
-            BaseSprite = "<size=70%><line-height=97%><cspace=0.16em><mark=#baffd0>WW</mark><mark=#00ff7b>WWWW</mark>\n<mark=#baffd0>WW</mark><mark=#00ff7b>WWWW</mark>\n<mark=#baffd0>WW</mark><mark=#00ff7b>WWWW</mark>\n<mark=#82531a>W</mark><#0000>WWWW</color><mark=#82531a>W</mark>";
+            BaseSprite = "<size=70%><line-height=97%><cspace=0.16em><mark=#baffd0>WW</mark><mark=#00ff7b>WWWW</mark>\n<mark=#baffd0>WW</mark><mark=#00ff7b>WWWW</mark>\n<mark=#baffd0>WW</mark><mark=#00ff7b>WWWW</mark>\n<mark=#82531a>W</mark><#0000>WWWW</color><mark=#82531a>W";
             UpdateStatus(false);
             CreateNetObject(GetSprite(), position);
         }
@@ -746,7 +746,7 @@ namespace EHR
     {
         public YellowBed(Vector2 position)
         {
-            BaseSprite = "<size=70%><line-height=97%><cspace=0.16em><mark=#fffebd>WW</mark><mark=#ff0>WWWW</mark>\n<mark=#fffebd>WW</mark><mark=#ff0>WWWW</mark>\n<mark=#fffebd>WW</mark><mark=#ff0>WWWW</mark>\n<mark=#82531a>W</mark><#0000>WWWW</color><mark=#82531a>W</mark>";
+            BaseSprite = "<size=70%><line-height=97%><cspace=0.16em><mark=#fffebd>WW</mark><mark=#ffff00>WWWW</mark>\n<mark=#fffebd>WW</mark><mark=#ffff00>WWWW</mark>\n<mark=#fffebd>WW</mark><mark=#ffff00>WWWW</mark>\n<mark=#82531a>W</mark><#0000>WWWW</color><mark=#82531a>W";
             UpdateStatus(false);
             CreateNetObject(GetSprite(), position);
         }
@@ -756,7 +756,7 @@ namespace EHR
     {
         public RedBed(Vector2 position)
         {
-            BaseSprite = "<size=70%><line-height=97%><cspace=0.16em><mark=#ffbbb5>WW</mark><mark=#ff0008>WWWW</mark>\n<mark=#ffbbb5>WW</mark><mark=#ff0008>WWWW</mark>\n<mark=#ffbbb5>WW</mark><mark=#ff0008>WWWW</mark>\n<mark=#82531a>W</mark><#0000>WWWW</color><mark=#82531a>W</mark>";
+            BaseSprite = "<size=70%><line-height=97%><cspace=0.16em><mark=#ffbbb5>WW</mark><mark=#ff0008>WWWW</mark>\n<mark=#ffbbb5>WW</mark><mark=#ff0008>WWWW</mark>\n<mark=#ffbbb5>WW</mark><mark=#ff0008>WWWW</mark>\n<mark=#82531a>W</mark><#0000>WWWW</color><mark=#82531a>W";
             UpdateStatus(false);
             CreateNetObject(GetSprite(), position);
         }
@@ -795,7 +795,7 @@ namespace EHR
         {
             Location = location;
             timer = 4f;
-            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WWWW</color><mark=#000>W</mark><mark=#ffea00>W</mark>\n<#0000>WWW</color><mark=#000>W</mark><#0000>WW\nW</color><mark=#ff0004>WW</mark><#0000>WWW</color>\n<mark=#ff0004>WWWW</mark><#0000>WW</color>\n<mark=#ff0004>WWWW</mark><#0000>WW\nW</color><mark=#ff0004>WW</mark><#0000>WWW</color>", location);
+            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>WWWW</color><mark=#000000>W</mark><mark=#ffea00>W</mark>\n<#0000>WWW</color><mark=#000000>W</mark><#0000>WW\nW</color><mark=#ff0004>WW</mark><#0000>WWW</color>\n<mark=#ff0004>WWWW</mark><#0000>WW</color>\n<mark=#ff0004>WWWW</mark><#0000>WW\nW</color><mark=#ff0004>WW</mark><#0000>WWW", location);
         }
 
         protected override void OnFixedUpdate()
@@ -824,7 +824,7 @@ namespace EHR
     {
         public Portal(Vector2 position)
         {
-            CreateNetObject("<size=70%><line-height=97%><cspace=0.16em><mark=#2b006b>WWWW</mark>\n<mark=#2b006b>W</mark><mark=#fa69ff>WW</mark><mark=#2b006b>W</mark>\n<mark=#2b006b>W</mark><mark=#fa69ff>WW</mark><mark=#2b006b>W</mark>\n<mark=#2b006b>W</mark><mark=#fa69ff>WW</mark><mark=#2b006b>W</mark>\n<mark=#2b006b>W</mark><mark=#fa69ff>WW</mark><mark=#2b006b>W</mark>\n<mark=#2b006b>WWWW</mark>", position);
+            CreateNetObject("<size=70%><line-height=97%><cspace=0.16em><mark=#2b006b>WWWW</mark>\n<mark=#2b006b>W</mark><mark=#fa69ff>WW</mark><mark=#2b006b>W</mark>\n<mark=#2b006b>W</mark><mark=#fa69ff>WW</mark><mark=#2b006b>W</mark>\n<mark=#2b006b>W</mark><mark=#fa69ff>WW</mark><mark=#2b006b>W</mark>\n<mark=#2b006b>W</mark><mark=#fa69ff>WW</mark><mark=#2b006b>W</mark>\n<mark=#2b006b>WWWW", position);
         }
     }
 
@@ -841,7 +841,7 @@ namespace EHR
         public void SpawnIfNotSpawned()
         {
             if (Spawned) return;
-            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark>\n<#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark>\n<mark=#00ff15>WW</mark><#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark>\n<mark=#00ff15>W</mark><#0000>WW</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark>\n<mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>WW</mark><#0000>W</color><mark=#00ff15>W</mark>\n<mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark><#0000>WW</color><mark=#00ff15>W</mark>", Position);
+            CreateNetObject("<line-height=97%><cspace=0.16em><#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark>\n<#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark>\n<mark=#00ff15>WW</mark><#0000>W</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark>\n<mark=#00ff15>W</mark><#0000>WW</color><mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark>\n<mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>WW</mark><#0000>W</color><mark=#00ff15>W</mark>\n<mark=#00ff15>W</mark><#0000>W</color><mark=#00ff15>W</mark><#0000>WW</color><mark=#00ff15>W", Position);
             Spawned = true;
         }
     }
