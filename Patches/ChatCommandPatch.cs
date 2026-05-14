@@ -1848,7 +1848,7 @@ internal static class ChatCommands
 
             string result = winners.Length == 1
                 ? string.Format(GetString("Poll.Winner"), winners[0].Key, PollAnswers[winners[0].Key], winners[0].Value) +
-                  PollVotes.Where(x => x.Key != winners[0].Key).Aggregate("<size=70%>", (s, t) => s + $"{t.Key} - {t.Value} {PollAnswers[t.Key]}\n")
+                  PollVotes.Where(x => x.Value > 0 && x.Key != winners[0].Key).Aggregate("<size=70%>", (s, t) => s + $"{t.Key} - {t.Value} {PollAnswers[t.Key]}\n")
                 : string.Format(GetString("Poll.Tie"), string.Join(" & ", winners.Select(x => $"{x.Key}{PollAnswers[x.Key]}")), maxVotes);
 
             Utils.SendMessage(result, title: Utils.ColorString(new(0, 255, 165, 255), GetString("PollResultTitle")));

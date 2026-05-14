@@ -810,6 +810,14 @@ namespace EHR
                 Despawn();
             }
         }
+
+        public override void OnMeeting()
+        {
+            if (Options.CurrentGameMode == CustomGameMode.BedWars)
+                base.OnMeeting();
+            else
+                Despawn();
+        }
     }
 
     internal sealed class Portal : CustomNetObject

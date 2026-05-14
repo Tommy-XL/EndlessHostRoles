@@ -1150,7 +1150,7 @@ internal static class TaskPanelBehaviourPatch
 
             case CustomGameMode.StopAndGo:
             {
-                Dictionary<byte, string> SummaryText3 = new Dictionary<byte, string>();
+                Dictionary<byte, string> summaryText3 = new Dictionary<byte, string>();
 
                 foreach (byte id in Main.PlayerStates.Keys)
                 {
@@ -1158,7 +1158,7 @@ internal static class TaskPanelBehaviourPatch
                     var summary = $"{Utils.GetProgressText(id)}  {Utils.ColorString(Main.PlayerColors[id], name)}";
                     if (Utils.GetProgressText(id).Trim() == string.Empty) continue;
 
-                    SummaryText3[id] = summary;
+                    summaryText3[id] = summary;
                 }
 
                 List<(int, byte)> list3 = [];
@@ -1167,29 +1167,33 @@ internal static class TaskPanelBehaviourPatch
                 list3.Sort();
                 list3 = list3.OrderBy(x => !Utils.GetPlayerById(x.Item2).IsAlive()).ToList();
 
-                foreach ((int, byte) id in list3.Where(x => SummaryText3.ContainsKey(x.Item2)).ToArray())
+                foreach ((int, byte) id in list3.Where(x => summaryText3.ContainsKey(x.Item2)).ToArray())
                 {
                     bool alive = Utils.GetPlayerById(id.Item2).IsAlive();
-                    finalTextBuilder.Append($"{(!alive ? "<#777777>" : string.Empty)}<size=1.6>\r\n{(alive ? SummaryText3[id.Item2].Replace("<size=2>", "<size=1.6>") : SummaryText3[id.Item2].RemoveHtmlTags())}{(!alive ? $"  <#ff0000>{GetString("Dead")}</color>" : string.Empty)}</size>");
+                    finalTextBuilder.Append($"{(!alive ? "<#777777>" : string.Empty)}<size=1.6>\r\n{(alive ? summaryText3[id.Item2].Replace("<size=2>", "<size=1.6>") : summaryText3[id.Item2].RemoveHtmlTags())}{(!alive ? $"  <#ff0000>{GetString("Dead")}</color>" : string.Empty)}</size>");
                 }
 
                 break;
             }
             case CustomGameMode.HotPotato:
             {
-                List<string> summaryText4 = [];
-                summaryText4.AddRange(from pc in Main.EnumeratePlayerControls() let alive = pc.IsAlive() select $"{(!alive ? "<size=90%><#777777>" : "<size=90%>")}{HotPotato.GetIndicator(pc.PlayerId)}{pc.PlayerId.ColoredPlayerName()}{(!alive ? $"</color>  <#ff0000>{GetString("Dead")}</color></size>" : "</size>")}");
-                finalTextBuilder.Append("\r\n\r\n").Append(string.Join('\n', summaryText4));
+                finalTextBuilder.Append("\r\n\r\n");
+                finalTextBuilder.Append("<size=90%>");
+                finalTextBuilder.Append(string.Join('\n', Main.EnumeratePlayerControls().Select(pc => new { pc, alive = pc.IsAlive() }).OrderByDescending(x => x.alive).Select(x => $"{(!x.alive ? "<#777777><s>" : "")}{HotPotato.GetIndicator(x.pc.PlayerId)}{(x.alive ? x.pc.PlayerId.ColoredPlayerName() : Main.AllPlayerNames.GetValueOrDefault(x.pc.PlayerId, $"ID {x.pc.PlayerId}"))}{(!x.alive ? $"</color>  <#ff0000>{GetString("Dead")}</color></s>" : "")}")));
+                finalTextBuilder.Append("</size>");
                 break;
             }
             case CustomGameMode.HideAndSeek:
             {
-                finalTextBuilder.Append("\r\n\r\n").Append(CustomHnS.GetTaskBarText());
+                finalTextBuilder.Append("\r\n\r\n");
+                finalTextBuilder.Append(CustomHnS.GetTaskBarText());
                 break;
             }
             case CustomGameMode.Speedrun:
             {
-                finalTextBuilder.Append("\r\n<size=90%>").Append(Speedrun.GetTaskBarText()).Append("</size>");
+                finalTextBuilder.Append("\r\n<size=90%>");
+                finalTextBuilder.Append(Speedrun.GetTaskBarText());
+                finalTextBuilder.Append("</size>");
                 break;
             }
             case CustomGameMode.NaturalDisasters:
