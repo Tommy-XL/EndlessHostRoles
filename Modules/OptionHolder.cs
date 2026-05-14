@@ -3575,6 +3575,3 @@ public static class Options
 
     // ReSharper restore NotAccessedField.Global
 }
-
-
-

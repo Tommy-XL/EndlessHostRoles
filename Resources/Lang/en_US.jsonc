@@ -8831,7 +8831,7 @@
   "LobbyUpdateInterval": "Always update the lobby info (player count, map, game mode, etc.) on the server at least every",
   "StoreCompletedAchievementsOnEHRDatabase": "Store completed achievements on the EHR database (to maintain progress in case of a reinstall or an update)",
   "AllCrewRolesHaveVanillaColor": "All <#8cffff>Crewmate</color> roles have <#8cffff>the vanilla Crewmate color</color> <#ffff00>(REQUIRES RESTART)</color>",
-  "MessageRpcSizeLimit": "Message RPC Size Limit (Higher limit = increased risk of disconnects but fewer message splits - if you never disconnect randomly, up to 15000 can be safe)",
+  "MessageRpcSizeLimit": "Message RPC Size Limit (Higher limit = increased risk of disconnects but fewer message splits - DO NOT INCREASE THIS IF YOU'RE HOSTING ON VANILLA REGIONS)",
   "KickSlowJoiningPlayers": "Kick Players Who Join Slowly To Prevent Disconnects (if they take more than 5 seconds to send their own data, they will be kicked automatically)",
   "EnableAutoMessage": "Enable Auto-Message (sends the template with the 'Notification' tag on a given interval in lobby)",
   "AutoMessageSendInterval": "The Auto-Message Is Sent Every",
