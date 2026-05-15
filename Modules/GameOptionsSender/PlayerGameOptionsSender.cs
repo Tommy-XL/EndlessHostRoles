@@ -398,6 +398,8 @@ public sealed class PlayerGameOptionsSender(PlayerControl player) : GameOptionsS
                 case CustomGameMode.Standard:
                 {
                     President.OnAnyoneApplyGameOptions(opt);
+                    
+                    AURoleOptions.ViperDissolveTime = ImpostorVanillaRoles.ViperDissolveTime.GetFloat(); // can't be desynced
 
                     float playerSpeed = Main.AllPlayerSpeed.GetValueOrDefault(player.PlayerId);
                     bool frozen = Mathf.Approximately(playerSpeed, Main.MinSpeed);
@@ -521,11 +523,6 @@ public sealed class PlayerGameOptionsSender(PlayerControl player) : GameOptionsS
                                 AURoleOptions.DetectiveSuspectLimit = Examiner.ExaminerSuspectLimit.GetFloat();
                                 break;
                             }
-                            case CustomRoles.Venom when roleTypes == RoleTypes.Viper:
-                            {
-                                AURoleOptions.ViperDissolveTime = Venom.VenomDissolveTime.GetFloat();
-                                break;
-                            }
                         }
                     }
 
@@ -569,9 +566,6 @@ public sealed class PlayerGameOptionsSender(PlayerControl player) : GameOptionsS
                     break;
                 case CustomRoles.DetectiveEHR:
                     AURoleOptions.DetectiveSuspectLimit = CrewmateVanillaRoles.DetectiveSuspectLimit.GetFloat();
-                    break;
-                case CustomRoles.ViperEHR:
-                    AURoleOptions.ViperDissolveTime  = ImpostorVanillaRoles.ViperDissolveTime.GetFloat();
                     break;
             }
 
@@ -695,9 +689,6 @@ public sealed class PlayerGameOptionsSender(PlayerControl player) : GameOptionsS
                         break;
                     case RoleTypes.Tracker:
                         AURoleOptions.TrackerCooldown *= 0.75f;
-                        break;
-                    case RoleTypes.Viper:
-                        AURoleOptions.ViperDissolveTime *= 0.75f;
                         break;
                     case RoleTypes.Detective:
                         AURoleOptions.DetectiveSuspectLimit *= 1.25f;
