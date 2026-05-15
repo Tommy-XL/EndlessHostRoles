@@ -1372,37 +1372,10 @@ internal static class TaskPanelBehaviourPatch
                 }
             case CustomGameMode.HotPotato:
                 {
-                    SummaryTextList.Clear();
-                    foreach (var pc in AllPlayers)
-                    {
-                        bool alive = pc.IsAlive();
-
-                        if (alive)
-                        {
-                            SummaryTextList.Add("<size=90%>" +
-                                HotPotato.GetIndicator(pc.PlayerId) +
-                                pc.PlayerId.ColoredPlayerName() +
-                                "</size>");
-                        }
-                        else
-                        {
-                            SummaryTextList.Add("<size=90%><#777777>" +
-                                HotPotato.GetIndicator(pc.PlayerId) +
-                                pc.PlayerId.ColoredPlayerName() +
-                                "</color>  <#ff0000>" +
-                                GetString("Dead") +
-                                "</color></size>");
-                        }
-                    }
-
-                    FinalTextBuilder.Append("\r\n\r\n");
-
-                    int count = SummaryTextList.Count;
-                    for (int index = 0; index < count; index++)
-                    {
-                        if (index > 0) FinalTextBuilder.Append('\n');
-                        FinalTextBuilder.Append(SummaryTextList[index]);
-                    }
+                    FinalTextBuilder.Append("\r\n\r\n")
+                        .Append("<size=90%>")
+                        .Append(string.Join('\n', Main.EnumeratePlayerControls().Select(pc => new { pc, alive = pc.IsAlive() }).OrderByDescending(x => x.alive).Select(x => $"{(!x.alive ? "<#777777><s>" : "")}{HotPotato.GetIndicator(x.pc.PlayerId)}{(x.alive ? x.pc.PlayerId.ColoredPlayerName() : Main.AllPlayerNames.GetValueOrDefault(x.pc.PlayerId, $"ID {x.pc.PlayerId}"))}{(!x.alive ? $"</color>  <#ff0000>{GetString("Dead")}</color></s>" : "")}")))
+                        .Append("</size>");
                     break;
                 }
             case CustomGameMode.HideAndSeek:
