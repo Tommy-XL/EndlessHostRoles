@@ -42,9 +42,6 @@ internal static class CustomRolesHelper
         CustomRoles.Empress,
         CustomRoles.Tar,
 
-        // Add-ons
-        CustomRoles.Energetic,
-
         // HnS
         CustomRoles.Jet,
         CustomRoles.Dasher

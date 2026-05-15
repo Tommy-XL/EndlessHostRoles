@@ -1630,7 +1630,7 @@ internal static class FixedUpdatePatch
         bool self = playerId == lpId; // Updates that are independent of the player are only executed for the local player.
 
         bool inTask = GameStates.IsInTask;
-        bool IsInGame = GameStates.IsInGame;
+        bool isInGame = GameStates.IsInGame;
         bool isLobby = GameStates.IsLobby;
         bool alive = player.IsAlive();
 
@@ -1853,7 +1853,7 @@ internal static class FixedUpdatePatch
                 player.cosmetics.nameText.text = Main.ShowPlayerInfoInLobby.Value && !player.AmOwner ? $"<#888888><size=1.2>{player.GetClient().PlatformData.Platform} | {player.FriendCode} | {player.GetClient().GetHashedPuid()}</size></color>\n{player.Data?.PlayerName}" : player.Data?.PlayerName;
         }
 
-        if (IsInGame)
+        if (isInGame)
         {
             if (!AmongUsClient.Instance.AmHost && Options.CurrentGameMode != CustomGameMode.Standard) return;
 
@@ -2281,6 +2281,9 @@ internal static class EnterVentPatch
             case CustomRoles.Mayor when !Options.UsePets.GetBool() && Mayor.MayorUsedButtonCount.TryGetValue(pc.PlayerId, out int count2) && count2 < Mayor.MayorNumOfUseButton.GetInt():
                 if (AmongUsClient.Instance.AmHost) pc.MyPhysics?.RpcBootFromVent(__instance.Id);
                 pc.ReportDeadBody(null);
+                break;
+            case CustomRoles.Vector when !AmongUsClient.Instance.AmHost:
+                Main.PlayerStates[pc.PlayerId].Role.OnEnterVent(pc, __instance);
                 break;
         }
 

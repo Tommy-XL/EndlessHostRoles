@@ -1,4 +1,5 @@
-﻿using Hazel;
+﻿using System.Text;
+using Hazel;
 using UnityEngine;
 
 namespace EHR;
@@ -55,5 +56,27 @@ public static class HazelExtensions
             float a = reader.ReadSingle();
             return new(r, g, b, a);
         }
+    }
+    
+    // -------------------------------------------------------------------------------------------------------------------------
+    
+    private static int GetPackedUIntSize(uint value)
+    {
+        int count = 0;
+
+        do
+        {
+            value >>= 7;
+            count++;
+        }
+        while (value != 0);
+
+        return count;
+    }
+    
+    private static int GetStringWriteSize(string text)
+    {
+        int byteCount = Encoding.UTF8.GetByteCount(text);
+        return GetPackedUIntSize((uint)byteCount) + byteCount;
     }
 }

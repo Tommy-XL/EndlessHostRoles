@@ -267,7 +267,7 @@ public static class Utils
                         return mapId switch
                         {
                             2 => false,
-                            4 => ShipStatusSystem.HeliSabotageSystem != null && ShipStatusSystem.HeliSabotageSystem.IsActive,
+                            4 => ShipStatusSystem.HeliSabotageSystem && ShipStatusSystem.HeliSabotageSystem.IsActive,
                             _ => ShipStatusSystem.ReactorSystemType != null && ShipStatusSystem.ReactorSystemType.IsActive
                         };
                     }
@@ -291,12 +291,12 @@ public static class Utils
                 case SystemTypes.HeliSabotage:
                     {
                         if (mapId != 4) return false;
-                        return ShipStatusSystem.HeliSabotageSystem != null && ShipStatusSystem.HeliSabotageSystem.IsActive;
+                        return ShipStatusSystem.HeliSabotageSystem && ShipStatusSystem.HeliSabotageSystem.IsActive;
                     }
                 case SystemTypes.MushroomMixupSabotage:
                     {
                         if (mapId != 5) return false;
-                        return ShipStatusSystem.MushroomMixupSabotageSystem != null && ShipStatusSystem.MushroomMixupSabotageSystem.IsActive;
+                        return ShipStatusSystem.MushroomMixupSabotageSystem && ShipStatusSystem.MushroomMixupSabotageSystem.IsActive;
                     }
                 default:
                     return false;
@@ -782,15 +782,13 @@ public static class Utils
         for (int i = 0; i < alive.Count; i++)
         {
             var role = alive[i].GetCustomRole();
-            if (role == CustomRoles.Altruist ||
-                role == CustomRoles.Occultist ||
-                role == CustomRoles.TimeMaster)
+            if (role is CustomRoles.Altruist or CustomRoles.Occultist or CustomRoles.TimeMaster)
                 return true;
         }
 
         foreach (var state in Main.PlayerStates.Values)
         {
-            if (state.Role is Altruist alt && alt.ReviveTimer != null)
+            if (state.Role is Altruist { ReviveTimer: not null })
                 return true;
         }
         return false;
@@ -1760,6 +1758,7 @@ public static class Utils
         }
     }
 
+    private const int RpcBaseOverhead = 16;
     public static bool TempReviveHostRunning;
     private static Stopwatch TempReviveHostRevertStopwatch = new();
     private static Stopwatch TempReviveHostTimeSinceRevivalStopwatch = new();
@@ -1920,68 +1919,211 @@ public static class Utils
             if (writer == null || writer.CurrentState == CustomRpcSender.State.Finished)
                 writer = CustomRpcSender.Create("Utils.SendMessage(1)", sendOption);
 
+            // ============================================================================
+            // EXACT Hazel-based size calculation and splitting logic.
+            // ============================================================================
+
             int fullRpcSizeLimit = Options.MessageRpcSizeLimit.GetInt();
-            int textRpcSize = text.Length * 2;
-            int titleRpcSize = title.Length * 2 + 4;
-            int resetNameRpcSize = sender.Data.PlayerName.Length * 2 + 4;
-            int fullRpcSize = textRpcSize + titleRpcSize + resetNameRpcSize;
+            string resetName = Main.AllPlayerNames.GetValueOrDefault(sender.PlayerId, string.Empty);
+
+            // --------------------------------------------------------------------------
+            // Helper methods
+            // --------------------------------------------------------------------------
+
+            static int GetPackedUInt32Size(uint value)
+            {
+                int count = 0;
+                do
+                {
+                    value >>= 7;
+                    count++;
+                } while (value != 0);
+
+                return count;
+            }
+
+            static int GetStringWriteSize(string value)
+            {
+                value ??= string.Empty;
+                int byteCount = Encoding.UTF8.GetByteCount(value);
+                return GetPackedUInt32Size((uint)byteCount) + byteCount;
+            }
+
+            static int EstimateSetNameRpcSize(string name)
+            {
+                return RpcBaseOverhead
+                       + 4 // Write(sender.Data.NetId)
+                       + GetStringWriteSize(name);
+            }
+
+            static int EstimateSendChatRpcSize(string message)
+            {
+                return RpcBaseOverhead
+                       + GetStringWriteSize(message);
+            }
+
+            bool FitsInLimit(params int[] rpcSizes)
+            {
+                int total = rpcSizes.Sum();
+                return total <= fullRpcSizeLimit;
+            }
+
+            string ExtractOpenSizeTag(string value)
+            {
+                MatchCollection opens = Regex.Matches(value, @"<size=\d+\.?\d*%?>");
+                MatchCollection closes = Regex.Matches(value, "</size>");
+                return opens.Count > closes.Count ? opens[^1].Value : string.Empty;
+            }
+
+            List<string> SplitIntoFittingChunks(string source, Func<string, bool> fits)
+            {
+                List<string> result = [];
+
+                if (string.IsNullOrEmpty(source))
+                {
+                    result.Add(source);
+                    return result;
+                }
+
+                int index = 0;
+                string prefix = string.Empty;
+
+                while (index < source.Length)
+                {
+                    int low = 1;
+                    int high = source.Length - index;
+                    int best = 0;
+
+                    // -----------------------------------------------------------------
+                    // Step 1: Binary search to find the maximum number of characters
+                    // that fit into one chunk.
+                    // -----------------------------------------------------------------
+                    while (low <= high)
+                    {
+                        int mid = (low + high) / 2;
+                        string candidate = string.Concat(prefix, source.AsSpan(index, mid));
+
+                        if (fits(candidate))
+                        {
+                            best = mid;
+                            low = mid + 1;
+                        }
+                        else
+                            high = mid - 1;
+                    }
+
+                    if (best == 0)
+                    {
+                        // Even one character doesn't fit.
+                        // This should only happen if the title itself exceeds the limit.
+                        return [];
+                    }
+
+                    // -----------------------------------------------------------------
+                    // Step 2: Prefer splitting at the last '\n' that fits.
+                    // If no newline exists, keep the full "best" hard split.
+                    // -----------------------------------------------------------------
+                    int splitLength = best;
+
+                    ReadOnlySpan<char> fittedSpan = source.AsSpan(index, best);
+                    int lastNewline = fittedSpan.LastIndexOf('\n');
+
+                    // Only use the newline if:
+                    // - one exists
+                    // - it is not the very first character (to avoid zero-length chunks)
+                    if (lastNewline > 0)
+                        splitLength = lastNewline + 1; // include the newline
+
+                    // -----------------------------------------------------------------
+                    // Step 3: Emit the chunk.
+                    // -----------------------------------------------------------------
+                    string chunk = string.Concat(prefix, source.AsSpan(index, splitLength));
+                    result.Add(chunk);
+
+                    // -----------------------------------------------------------------
+                    // Step 4: Advance and preserve open <size> tags.
+                    // -----------------------------------------------------------------
+                    index += splitLength;
+                    prefix = ExtractOpenSizeTag(chunk);
+                }
+
+                return result;
+            }
+
+            CustomRpcSender SendTempTitleMessage(string tempTitle)
+            {
+                if (writer.CurrentState == CustomRpcSender.State.Finished)
+                    writer = CustomRpcSender.Create("Utils.SendMessage.SendTempTitleMessage", sendOption);
+
+                writer.AutoStartRpc(sender.NetId, RpcCalls.SetName, targetClientId)
+                    .Write(sender.Data.NetId)
+                    .Write(tempTitle)
+                    .EndRpc();
+
+                writer.AutoStartRpc(sender.NetId, RpcCalls.SendChat, targetClientId)
+                    .Write("\n")
+                    .EndRpc();
+
+                writer.AutoStartRpc(sender.NetId, RpcCalls.SetName, targetClientId)
+                    .Write(sender.Data.NetId)
+                    .Write(resetName)
+                    .EndRpc();
+
+                writer.SendMessage();
+
+                try
+                {
+                    string pureTitle = tempTitle.RemoveHtmlTags();
+                    Logger.Info($" Message: \\n - To: {(sendTo == byte.MaxValue ? "Everyone" : $"{GetPlayerById(sendTo)?.GetRealName()}")} - Title: {pureTitle[..Math.Min(pureTitle.Length, 300)]}", "SendMessage");
+                }
+                catch
+                {
+                    Logger.Info(" Message sent", "SendMessage");
+                }
+
+                if (addToHistory)
+                    ChatUpdatePatch.LastMessages.Add(("\n", sendTo, tempTitle, TimeStamp));
+
+                return writer;
+            }
+
+            // --------------------------------------------------------------------------
+            // TITLE SPLITTING
+            // --------------------------------------------------------------------------
 
             if (!noSplit)
             {
-                int titleRpcSizeLimit = fullRpcSizeLimit - textRpcSize - resetNameRpcSize;
+                bool fullMessageFits = FitsInLimit(
+                    EstimateSetNameRpcSize(title),
+                    EstimateSendChatRpcSize(text),
+                    EstimateSetNameRpcSize(resetName));
 
-                if ((fullRpcSize <= fullRpcSizeLimit && titleRpcSizeLimit <= titleRpcSize) || title.Length <= 100)
+                if (!fullMessageFits && title.Length > 100)
                 {
-                    writer.AutoStartRpc(sender.NetId, RpcCalls.SetName, targetClientId)
-                        .Write(sender.Data.NetId)
-                        .Write(title)
-                        .EndRpc();
-                }
-                else
-                {
-                    titleRpcSizeLimit = (fullRpcSizeLimit - 8 - resetNameRpcSize) * 2;
+                    List<string> titleChunks = SplitIntoFittingChunks(
+                        title,
+                        chunk => FitsInLimit(
+                            EstimateSetNameRpcSize(chunk),
+                            EstimateSendChatRpcSize("\n"),
+                            EstimateSetNameRpcSize(resetName)));
 
-                    if (titleRpcSizeLimit - 4 < 1)
+                    if (titleChunks.Count == 0)
                     {
                         Logger.SendInGame(GetString("MessageTooLong"), Color.red);
-                        if (!multiple) writer.SendMessage(dispose: true);
+
+                        if (!multiple)
+                            writer.SendMessage(dispose: true);
+
                         return writer;
                     }
 
-                    string[] lines = title.Split('\n');
-                    var shortenedTitle = string.Empty;
+                    foreach (string chunk in titleChunks)
+                        writer = SendTempTitleMessage(chunk);
 
-                    foreach (string line in lines)
-                    {
-                        if (shortenedTitle.Length * 2 + line.Length * 2 + 4 < titleRpcSizeLimit)
-                        {
-                            shortenedTitle += line + "\n";
-                            continue;
-                        }
+                    if (text == "\n")
+                        return writer;
 
-                        if (shortenedTitle.Length * 2 >= titleRpcSizeLimit - 4)
-                        {
-                            foreach (char[] chars in shortenedTitle.Chunk(titleRpcSizeLimit - 4))
-                                writer = SendTempTitleMessage(new string(chars));
-                        }
-                        else
-                            writer = SendTempTitleMessage(shortenedTitle);
-
-                        string sentText = shortenedTitle;
-                        shortenedTitle = line + "\n";
-
-                        if (Regex.Matches(sentText, "<size").Count > Regex.Matches(sentText, "</size>").Count)
-                        {
-                            string sizeTag = Regex.Matches(sentText, @"<size=\d+\.?\d*%?>")[^1].Value;
-                            shortenedTitle = sizeTag + shortenedTitle;
-                        }
-                    }
-
-                    if (shortenedTitle.Length > 0 && !shortenedTitle.IsNullOrWhiteSpace())
-                        writer = SendTempTitleMessage(shortenedTitle);
-
-                    if (text == "\n") return writer;
-
+                    // After long title was sent separately, use invisible title.
                     title = "‎";
 
                     if (writer.CurrentState == CustomRpcSender.State.Finished)
@@ -1991,91 +2133,55 @@ public static class Utils
                         .Write(sender.Data.NetId)
                         .Write(title)
                         .EndRpc();
+                }
+            }
 
-                    CustomRpcSender SendTempTitleMessage(string tempTitle)
+            // --------------------------------------------------------------------------
+            // TEXT SPLITTING
+            // --------------------------------------------------------------------------
+
+            if (!noSplit)
+            {
+                bool finalMessageFits = FitsInLimit(
+                    EstimateSetNameRpcSize(title),
+                    EstimateSendChatRpcSize(text),
+                    EstimateSetNameRpcSize(resetName));
+
+                if (!finalMessageFits)
+                {
+                    List<string> textChunks = SplitIntoFittingChunks(
+                        text,
+                        chunk => FitsInLimit(
+                            EstimateSetNameRpcSize(title),
+                            EstimateSendChatRpcSize(chunk),
+                            EstimateSetNameRpcSize(resetName)));
+
+                    if (textChunks.Count == 0)
                     {
-                        if (writer.CurrentState == CustomRpcSender.State.Finished)
-                            writer = CustomRpcSender.Create("Utils.SendMessage.SendTempTitleMessage", sendOption);
+                        Logger.SendInGame(GetString("MessageTooLong"), Color.red);
 
-                        writer.AutoStartRpc(sender.NetId, RpcCalls.SetName, targetClientId)
-                            .Write(sender.Data.NetId)
-                            .Write(tempTitle)
-                            .EndRpc();
+                        if (!multiple)
+                            writer.SendMessage(dispose: true);
 
-                        writer.AutoStartRpc(sender.NetId, RpcCalls.SendChat, targetClientId)
-                            .Write("\n")
-                            .EndRpc();
-
-                        writer.AutoStartRpc(sender.NetId, RpcCalls.SetName, targetClientId)
-                            .Write(sender.Data.NetId)
-                            .Write(Main.AllPlayerNames.GetValueOrDefault(sender.PlayerId, string.Empty))
-                            .EndRpc();
-
-                        writer.SendMessage();
-
-                        try
-                        {
-                            string pureTitle = tempTitle.RemoveHtmlTags();
-                            Logger.Info($" Message: \\n - To: {(sendTo == byte.MaxValue ? "Everyone" : $"{GetPlayerById(sendTo)?.GetRealName()}")} - Title: {pureTitle[..(pureTitle.Length <= 300 ? pureTitle.Length : 300)]}", "SendMessage");
-                        }
-                        catch { Logger.Info(" Message sent", "SendMessage"); }
-
-                        if (addToHistory) ChatUpdatePatch.LastMessages.Add(("\n", sendTo, tempTitle, TimeStamp));
                         return writer;
                     }
-                }
-            }
 
-            titleRpcSize = title.Length * 2 + 4;
-            int textRpcSizeLimit = fullRpcSizeLimit - titleRpcSize - resetNameRpcSize;
-
-            if (textRpcSizeLimit < 1 && textRpcSize >= textRpcSizeLimit && !noSplit)
-            {
-                Logger.SendInGame(GetString("MessageTooLong"), Color.red);
-                if (!multiple) writer.SendMessage(dispose: true);
-                return writer;
-            }
-
-            if (textRpcSize >= textRpcSizeLimit && !noSplit)
-            {
-                string[] lines = text.Split('\n');
-                var shortenedText = string.Empty;
-
-                foreach (string line in lines)
-                {
-                    if (shortenedText.Length * 2 + line.Length * 2 + 4 < textRpcSizeLimit)
+                    for (int i = 0; i < textChunks.Count; i++)
                     {
-                        shortenedText += line + "\n";
-                        continue;
+                        writer = SendMessage(
+                            textChunks[i],
+                            sendTo,
+                            title,
+                            noSplit: true,
+                            writer: writer,
+                            final: i == textChunks.Count - 1,
+                            multiple: multiple,
+                            importance: importance,
+                            addToHistory: addToHistory);
                     }
 
-                    writer = shortenedText.Length * 2 >= textRpcSizeLimit
-                        ? shortenedText.Chunk(textRpcSizeLimit).Aggregate(writer, (current, chunk) => SendMessage(new(chunk), sendTo, title, true, current, importance: importance))
-                        : SendMessage(shortenedText, sendTo, title, true, writer, importance: importance);
-
-                    string sentText = shortenedText;
-                    shortenedText = line + "\n";
-
-                    if (Regex.Matches(sentText, "<size").Count > Regex.Matches(sentText, "</size>").Count)
-                    {
-                        string sizeTag = Regex.Matches(sentText, @"<size=\d+\.?\d*%?>")[^1].Value;
-                        shortenedText = sizeTag + shortenedText;
-                    }
+                    return writer;
                 }
-
-                if (shortenedText.Length > 0 && !shortenedText.IsNullOrWhiteSpace()) writer = SendMessage(shortenedText, sendTo, title, true, writer, true, importance: importance);
-                else
-                {
-                    writer.AutoStartRpc(sender.NetId, RpcCalls.SetName, targetClientId)
-                        .Write(sender.Data.NetId)
-                        .Write(Main.AllPlayerNames.GetValueOrDefault(sender.PlayerId, string.Empty))
-                        .EndRpc();
-
-                    if (!multiple) writer.SendMessage();
-                    else RestartMessageIfTooLong(sendOption);
-                }
-
-                return writer;
             }
 
             try
@@ -2645,20 +2751,14 @@ public static class Utils
         for (int seerIndex = 0; seerIndex < aapc.Count; seerIndex++)
         {
             PlayerControl seer = aapc[seerIndex];
-            for (int targetIndex = 0; targetIndex < aapc.Count; targetIndex++)
+            NotifyRoles(SpecifySeer: seer, NoCache: noCache, SendOption: sendOption);
+            
+            if (stopwatch.ElapsedMilliseconds >= frameBudget)
             {
+                stopwatch.Reset();
+                yield return null;
                 if (GameStates.IsMeeting || ReportDeadBodyPatch.MeetingStarted) yield break;
-                PlayerControl target = aapc[targetIndex];
-                var sender = CustomRpcSender.Create("Utils.NotifyEveryoneAsync", sendOption, log: false);
-                var hasValue = WriteSetNameRpcsToSender(ref sender, false, noCache, false, false, false, false, seer, [seer], [target], out bool senderWasCleared, sendOption) && !senderWasCleared;
-                sender.SendMessage(!hasValue || sender.stream.Length <= 3);
-                
-                if (stopwatch.ElapsedMilliseconds >= frameBudget)
-                {
-                    stopwatch.Reset();
-                    yield return null;
-                    stopwatch.Start();
-                }
+                stopwatch.Start();
             }
         }
     }
@@ -2771,7 +2871,6 @@ public static class Utils
 
             var lovers = Main.LoversPlayers;
             bool seerIsLover = false;
-            bool targetIsLover = false;
 
             if (!GameStates.IsLobby)
             {
@@ -2780,7 +2879,6 @@ public static class Utils
                 SelfMark.Append(Snitch.GetWarningArrow(seer));
 
                 seerIsLover = false;
-                targetIsLover = false;
 
                 if (lovers.Count == 2)
                 {
@@ -3150,7 +3248,7 @@ public static class Utils
 
                             TargetMark.Append(Snitch.GetWarningMark(seer, target));
 
-                            targetIsLover = false;
+                            var targetIsLover = false;
                             if (lovers.Count == 2)
                             {
                                 byte loverIdFirst = lovers[0].PlayerId;
@@ -3508,18 +3606,14 @@ public static class Utils
                 return true;
         }
 
-        var gameMode = Options.CurrentGameMode;
-
-        if (gameMode == CustomGameMode.FFA ||
-            gameMode == CustomGameMode.StopAndGo ||
-            gameMode == CustomGameMode.HotPotato ||
-            gameMode == CustomGameMode.Speedrun)
-            return true;
-
-        if (gameMode == CustomGameMode.HideAndSeek && CustomHnS.IsRoleTextEnabled(seer, target))
-            return true;
-
-        return false;
+        switch (Options.CurrentGameMode)
+        {
+            case CustomGameMode.FFA or CustomGameMode.StopAndGo or CustomGameMode.HotPotato or CustomGameMode.Speedrun:
+            case CustomGameMode.HideAndSeek when CustomHnS.IsRoleTextEnabled(seer, target):
+                return true;
+            default:
+                return false;
+        }
     }
 
     public static bool IsRoleTextEnabled(PlayerControl target)
@@ -4720,16 +4814,16 @@ public static class Utils
         for (int i = start; i < length; i++)
         {
             char c = str[i];
-            if (c == '<')
+            switch (c)
             {
-                insideTag = true;
-                continue;
+                case '<':
+                    insideTag = true;
+                    continue;
+                case '>':
+                    insideTag = false;
+                    continue;
             }
-            if (c == '>')
-            {
-                insideTag = false;
-                continue;
-            }
+
             if (!insideTag)
             {
                 buffer[idx++] = c;

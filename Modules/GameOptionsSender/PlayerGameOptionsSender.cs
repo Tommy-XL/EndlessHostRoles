@@ -269,6 +269,8 @@ public sealed class PlayerGameOptionsSender(PlayerControl player) : GameOptionsS
             PackedWriter.EndMessage();
         }
         PackedWriter.EndMessage();
+        
+        Logger.Info($"PackedWriter message write complete - Length: {PackedWriter.Length}, Messages: {PackedWriterMessages}", "GameOptionsSender");
     }
 
     public static void RemoveSender(PlayerControl player)
