@@ -590,7 +590,7 @@ public static class CustomRpcSenderExtensions
             // Check Observer
             if (!forObserver && !MeetingStates.FirstMeeting)
             {
-                foreach (PlayerControl x in Main.CachedAllPlayerControls())
+                foreach (PlayerControl x in Main.EnumeratePlayerControls())
                 {
                     if (x.Is(CustomRoles.Observer) && killer.PlayerId != x.PlayerId && sender.RpcGuardAndKill(x, target, true))
                         returnValue = true;
@@ -672,7 +672,7 @@ public static class CustomRpcSenderExtensions
                     returnValue = true;
                 }
 
-                foreach (PlayerControl x in Main.CachedAllPlayerControls())
+                foreach (PlayerControl x in Main.EnumeratePlayerControls())
                 {
                     if (x.Is(CustomRoles.Observer) && target.PlayerId != x.PlayerId && sender.RpcGuardAndKill(x, target, true, true))
                         returnValue = true;
